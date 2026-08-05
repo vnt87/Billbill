@@ -7,6 +7,7 @@ import { Trash2, ChevronLeft, ChevronRight, Search, Calendar } from 'lucide-reac
 import { Skeleton } from '../ui/Skeleton';
 import { Link } from 'react-router-dom';
 import { RollingText } from '../ui/RollingText';
+import { SpotlightCard } from '../ui/SpotlightCard';
 
 interface BillWithMetadata extends BillData {
   id: string;
@@ -112,7 +113,7 @@ export function History() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">{t.navigation.history}</h1>
 
-      <div className="mb-6 rounded-none border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800/80">
+      <SpotlightCard as="section" className="mb-6 rounded-none border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800/80">
         <div className="flex flex-col gap-4 md:flex-row md:items-end">
           <div className="flex-1">
             <label
@@ -162,7 +163,7 @@ export function History() {
             <RollingText>{t.clearFilters}</RollingText>
           </button>
         </div>
-      </div>
+      </SpotlightCard>
 
       {isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -229,7 +230,8 @@ export function History() {
               const previewNames = participants.slice(0, 3).map((player) => player.name).join(', ');
 
               return (
-                <article
+                <SpotlightCard
+                  as="article"
                   key={bill.id}
                   className="group relative rounded-none border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-800"
                 >
@@ -278,7 +280,7 @@ export function History() {
                       {t.viewDetails}
                     </span>
                   </Link>
-                </article>
+                </SpotlightCard>
               );
             })}
           </div>

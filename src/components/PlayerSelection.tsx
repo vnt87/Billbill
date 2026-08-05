@@ -6,6 +6,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import * as Ariakit from '@ariakit/react';
 import { NumericFormat } from 'react-number-format';
 import { RollingText } from './ui/RollingText';
+import { SpotlightCard } from './ui/SpotlightCard';
 
 interface PlayerSelectionProps {
   players: Player[];
@@ -140,7 +141,7 @@ export function PlayerSelection({ players, onPlayerChange, sessionStart, session
   // }, [editingItemName]);
 
   return (
-    <section aria-labelledby="players-heading" className="rounded-none border border-slate-200 bg-white p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900">
+    <SpotlightCard as="section" aria-labelledby="players-heading" className="rounded-none border border-slate-200 bg-white p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900">
       <div className="mb-4">
         <h2 id="players-heading" className="text-xl font-bold text-slate-950 dark:text-white">{t.players}</h2>
       </div>
@@ -351,6 +352,6 @@ export function PlayerSelection({ players, onPlayerChange, sessionStart, session
           <RollingText>{t.addPlayerButton}</RollingText>
         </button>
       </div>
-    </section>
+    </SpotlightCard>
   );
 }

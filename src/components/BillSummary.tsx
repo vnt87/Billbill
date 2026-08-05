@@ -9,6 +9,7 @@ import html2canvas from 'html2canvas';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ReceiptText } from 'lucide-react';
 import { RollingText } from './ui/RollingText';
+import { SpotlightCard } from './ui/SpotlightCard';
 
 interface BillSummaryProps {
   data: BillData;
@@ -20,7 +21,7 @@ interface BillSummaryProps {
 export function BillSummary({ data, sharedItems = [], validationErrors = [], isValid = validationErrors.length === 0 }: BillSummaryProps) {
   const { t } = useLanguage();
   const { formatDuration } = useDateUtils();
-  const summaryRef = useRef<HTMLDivElement>(null);
+  const summaryRef = useRef<HTMLElement>(null);
   const exportButtonRef = useRef<HTMLButtonElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
   const [savedBillId, setSavedBillId] = useState<string | null>(null);
@@ -152,7 +153,8 @@ export function BillSummary({ data, sharedItems = [], validationErrors = [], isV
   const shareUrl = savedBillId ? `${window.location.origin}/bill/${savedBillId}` : null;
 
   return (
-    <aside
+    <SpotlightCard
+      as="aside"
       ref={summaryRef}
       aria-label={t.billSummary}
       className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white shadow-[0_-12px_40px_rgba(15,23,42,0.16)] dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:inset-auto lg:top-6 lg:z-auto lg:rounded-none lg:border lg:shadow-none"
@@ -311,6 +313,6 @@ export function BillSummary({ data, sharedItems = [], validationErrors = [], isV
         <span className="text-blue-700 dark:text-blue-300">https://chiabill.pages.dev</span>
       </div>
       </div>
-    </aside>
+    </SpotlightCard>
   );
 }

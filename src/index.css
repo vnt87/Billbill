@@ -88,6 +88,62 @@ body {
   line-height: 1.5;
 }
 
+.spotlight-surface {
+  --spotlight-x: 50%;
+  --spotlight-y: 50%;
+  isolation: isolate;
+  position: relative;
+}
+
+.spotlight-surface::before {
+  position: absolute;
+  inset: -1px;
+  z-index: 0;
+  pointer-events: none;
+  content: '';
+  opacity: 0;
+  border: 1px solid rgb(59 130 246 / 0.62);
+  box-shadow:
+    0 0 20px 1px rgb(37 99 235 / 0.32),
+    inset 0 0 14px rgb(37 99 235 / 0.12);
+  transition: opacity 180ms ease-out;
+}
+
+.spotlight-surface::after {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  content: '';
+  opacity: 0;
+  background: radial-gradient(
+    220px circle at var(--spotlight-x) var(--spotlight-y),
+    rgb(37 99 235 / 0.14),
+    transparent 72%
+  );
+  transition: opacity 180ms ease-out;
+}
+
+.dark .spotlight-surface[data-spotlight-active='true']::before {
+  opacity: 1;
+}
+
+.dark .spotlight-surface[data-spotlight-active='true']::after {
+  opacity: 1;
+}
+
+.spotlight-surface > *:not([class*='absolute']):not([class*='fixed']):not([class*='sticky']) {
+  position: relative;
+  z-index: 1;
+}
+
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  .spotlight-surface::before,
+  .spotlight-surface::after {
+    display: none;
+  }
+}
+
 button,
 a,
 input,

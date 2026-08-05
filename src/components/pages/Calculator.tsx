@@ -5,6 +5,7 @@ import { BillSummary } from '../BillSummary';
 import { SharedItems } from '../SharedItems';
 import { Player, BillData, ConsumableItem } from '../../types';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { SpotlightCard } from '../ui/SpotlightCard';
 
 let playerIdCounter = 1;
 const initialPlayers: Player[] = [
@@ -108,7 +109,7 @@ export function Calculator() {
     <main className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Left Column - Inputs */}
       <div className="lg:col-span-8 space-y-6">
-        <section aria-labelledby="session-heading" className="rounded-none border border-slate-200 bg-white p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900 space-y-5">
+        <SpotlightCard as="section" aria-labelledby="session-heading" className="rounded-none border border-slate-200 bg-white p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900 space-y-5">
           <div>
             <h1 id="session-heading" className="text-xl font-bold text-slate-950 dark:text-white">{t.sections.session}</h1>
           </div>
@@ -199,7 +200,7 @@ export function Calculator() {
           {touched.session && billData.sessionStart && billData.sessionEnd && billData.sessionStart === billData.sessionEnd && (
             <p className="text-sm font-medium text-red-700 dark:text-red-400">{t.validation.sessionTimeInvalid}</p>
           )}
-        </section>
+        </SpotlightCard>
 
         <PlayerSelection
           players={billData.players}

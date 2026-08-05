@@ -7,6 +7,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trash2, Check as CheckIcon, Copy as ClipboardCopyIcon, RefreshCw } from 'lucide-react';
 import { RollingText } from '../ui/RollingText';
+import { SpotlightCard } from '../ui/SpotlightCard';
 
 interface BillWithMetadata extends BillData {
   id: string;
@@ -166,7 +167,7 @@ export function BillDetails({ id }: BillDetailsProps) {
         </Link>
       </div>
 
-      <div className="rounded-none border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <SpotlightCard as="section" aria-labelledby="bill-details-heading" className="rounded-none border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
         {error && (
           <div
             role="alert"
@@ -178,7 +179,7 @@ export function BillDetails({ id }: BillDetailsProps) {
 
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">{t.billDetails}</h1>
+            <h1 id="bill-details-heading" className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">{t.billDetails}</h1>
             <div className="text-sm text-slate-500 dark:text-slate-400">
               {t.createdOn} {bill.created_at ? formatDate(bill.created_at, 'MMMM d, yyyy HH:mm') : t.noDate}
             </div>
@@ -215,7 +216,7 @@ export function BillDetails({ id }: BillDetailsProps) {
           <h2 id="bill-participant-breakdown" className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">{t.participantBreakdown}</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {bill.players.filter(p => p.participated).map((player) => (
-              <div key={player.id} className="rounded-none border border-slate-200 p-4 shadow-sm dark:border-slate-700">
+              <SpotlightCard as="article" key={player.id} className="rounded-none border border-slate-200 p-4 shadow-sm dark:border-slate-700">
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-slate-900 dark:text-white">{player.name}</span>
                   <span className="font-medium text-blue-600 dark:text-blue-400">
@@ -254,7 +255,7 @@ export function BillDetails({ id }: BillDetailsProps) {
                     </ul>
                   </div>
                 )}
-              </div>
+              </SpotlightCard>
             ))}
           </div>
         </section>
@@ -327,7 +328,7 @@ export function BillDetails({ id }: BillDetailsProps) {
             </div>
           </section>
         </div>
-      </div>
+      </SpotlightCard>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import * as Ariakit from '@ariakit/react';
 import { NumericFormat } from 'react-number-format';
 import { RollingText } from './ui/RollingText';
+import { SpotlightCard } from './ui/SpotlightCard';
 
 interface SharedItemsProps {
   items: ConsumableItem[];
@@ -57,7 +58,7 @@ export function SharedItems({ items, onItemsChange }: SharedItemsProps) {
   };
 
   return (
-    <section aria-labelledby="shared-items-heading" className="rounded-none border border-slate-200 bg-white p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900 space-y-4">
+    <SpotlightCard as="section" aria-labelledby="shared-items-heading" className="rounded-none border border-slate-200 bg-white p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900 space-y-4">
       <div>
         <div className="flex items-center">
           <h2 id="shared-items-heading" className="text-xl font-bold text-slate-950 dark:text-white">{t.sharedItems}</h2>
@@ -173,6 +174,6 @@ export function SharedItems({ items, onItemsChange }: SharedItemsProps) {
           <RollingText>{t.addSharedItemButton}</RollingText>
         </button>
       </div>
-    </section>
+    </SpotlightCard>
   );
 }

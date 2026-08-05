@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { getBill, deleteBill } from '../../lib/api';
-import { formatDate, formatTime, formatDuration } from '../../lib/dateUtils';
+import { useDateUtils } from '../../lib/dateUtils';
 import { BillData, Player } from '../../types';
-import { differenceInMinutes, parse } from 'date-fns';
+import { parse } from 'date-fns';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trash2, Check as CheckIcon, Copy as ClipboardCopyIcon, RefreshCw } from 'lucide-react';
+import { RollingText } from '../ui/RollingText';
 
 interface BillWithMetadata extends BillData {
   id: string;
@@ -18,17 +19,20 @@ interface BillDetailsProps {
 
 export function BillDetails({ id }: BillDetailsProps) {
   const { t } = useLanguage();
+  const { formatDate, formatTime, formatDuration } = useDateUtils();
   const navigate = useNavigate();
   const [bill, setBill] = useState<BillWithMetadata | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const currentURL = window.location.href;
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const calculatePlayerTime = (player: Player): number => {
     if (!player.startTime || !player.endTime) return 0;
     const start = parse(player.startTime, 'HH:mm', new Date());
     const end = parse(player.endTime, 'HH:mm', new Date());
-    const minutes = differenceInMinutes(end, start);
+    const minutes = (end.getHours() * 60 + end.getMinutes()) - (start.getHours() * 60 + start.getMinutes());
     return minutes < 0 ? minutes + 24 * 60 : minutes; // Handle overnight sessions
   };
 
@@ -67,24 +71,25 @@ export function BillDetails({ id }: BillDetailsProps) {
   const formatCurrency = (amount: number): string => {
     return `${amount.toFixed(0)}k`;
   };
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const loadBill = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const billData = await getBill(id);
+      setBill(billData);
+    } catch (err) {
+      setError(t.failedToLoad);
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadBill = async () => {
-      try {
-        const billData = await getBill(id);
-        setBill(billData);
-      } catch (err) {
-        setError(t.failedToLoad);
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadBill();
-  }, [id, t]);
+    void loadBill();
+  }, [id]);
 
   const handleDelete = async () => {
     if (window.confirm(t.actions?.confirmDelete || 'Are you sure you want to delete this bill?')) {
@@ -93,7 +98,7 @@ export function BillDetails({ id }: BillDetailsProps) {
         await deleteBill(id);
         navigate('/history');
       } catch (err) {
-        setError('Failed to delete bill');
+        setError(t.failedToDelete);
         console.error(err);
       } finally {
         setIsDeleting(false);
@@ -101,12 +106,52 @@ export function BillDetails({ id }: BillDetailsProps) {
     }
   };
 
+  const handleCopyLink = async () => {
+    try {
+      setError(null);
+      await navigator.clipboard.writeText(currentURL);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy bill link:', err);
+      setError(t.copyLinkFailed);
+    }
+  };
+
   if (isLoading) {
-    return <div className="text-center p-4 text-gray-800 dark:text-gray-200">{t.loading}</div>;
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="rounded-none border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{t.loading}</p>
+        </div>
+      </div>
+    );
   }
 
-  if (error || !bill) {
-    return <div className="text-center text-red-500 p-4">{error || t.billNotFound}</div>;
+  if (!bill) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="rounded-none border border-red-200 bg-red-50 p-6 text-center dark:border-red-900/60 dark:bg-red-950/20">
+          <p className="text-base font-semibold text-red-700 dark:text-red-300">{error || t.billNotFound}</p>
+          <p className="mt-2 text-sm text-red-600 dark:text-red-200/80">{t.failedToLoadHint}</p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => void loadBill()}
+              className="inline-flex items-center justify-center rounded-none bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
+            >
+              <RollingText>{t.retry}</RollingText>
+            </button>
+            <Link
+              to="/history"
+              className="inline-flex items-center justify-center rounded-none border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-white active:scale-[0.99] dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
+            >
+              <RollingText>{t.backToHistory}</RollingText>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -114,29 +159,38 @@ export function BillDetails({ id }: BillDetailsProps) {
       <div className="mb-6">
         <Link 
           to="/history" 
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          className="inline-flex items-center text-blue-600 transition hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 rounded-none"
         >
           <ArrowLeft className="mr-2" size={16} />
-          {t.backToHistory}
+          <RollingText>{t.backToHistory}</RollingText>
         </Link>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <div className="flex justify-between items-start mb-6">
+      <div className="rounded-none border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        {error && (
+          <div
+            role="alert"
+            className="mb-4 rounded-none border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/20 dark:text-red-300"
+          >
+            {error}
+          </div>
+        )}
+
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">{t.billDetails}</h1>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">{t.billDetails}</h1>
+            <div className="text-sm text-slate-500 dark:text-slate-400">
               {t.createdOn} {bill.created_at ? formatDate(bill.created_at, 'MMMM d, yyyy HH:mm') : t.noDate}
             </div>
           </div>
-          <div className="text-xl font-bold text-gray-900 dark:text-white">
+          <div className="text-xl font-bold text-slate-900 dark:text-white">
             {t.total}: {bill.totalAmount.toLocaleString()}k
           </div>
         </div>
 
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">{t.sessionInfo}</h2>
-            <div className="text-gray-600 dark:text-gray-400">
+        <section className="mb-6 rounded-none bg-slate-50 px-4 py-4 dark:bg-slate-900/60" aria-labelledby="bill-session-info">
+          <h2 id="bill-session-info" className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">{t.sessionInfo}</h2>
+            <div className="text-slate-600 dark:text-slate-400">
               {bill.sessionStart && bill.sessionEnd ? (
                 <>
                   {(() => {
@@ -146,7 +200,7 @@ export function BillDetails({ id }: BillDetailsProps) {
                     if (durationInMinutes < 0) durationInMinutes += 24 * 60; // Handle overnight sessions
                     return (
                       <span>
-                        {formatTime(bill.sessionStart)} - {formatTime(bill.sessionEnd)} • ({formatDuration(durationInMinutes)})
+                        {formatTime(bill.sessionStart)} - {formatTime(bill.sessionEnd)} - ({formatDuration(durationInMinutes)})
                       </span>
                     );
                   })()}
@@ -155,20 +209,20 @@ export function BillDetails({ id }: BillDetailsProps) {
                 t.noTimeData
               )}
             </div>
-        </div>
+        </section>
 
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">{t.players}</h2>
+        <section className="mb-6" aria-labelledby="bill-participant-breakdown">
+          <h2 id="bill-participant-breakdown" className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">{t.participantBreakdown}</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {bill.players.filter(p => p.participated).map((player) => (
-      <div key={player.id} className="border dark:border-gray-700 rounded-lg p-4 space-y-2">
+              <div key={player.id} className="rounded-none border border-slate-200 p-4 shadow-sm dark:border-slate-700">
                 <div className="flex justify-between items-center">
-                  <span className="font-medium text-gray-900 dark:text-white">{player.name}</span>
-                  <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                  <span className="font-medium text-slate-900 dark:text-white">{player.name}</span>
+                  <span className="font-medium text-blue-600 dark:text-blue-400">
                     {formatCurrency(calculatePlayerShare(player, bill.players.filter(p => p.participated)))}
                   </span>
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                   {player.startTime && player.endTime ? (
                     <>
                       {(() => {
@@ -178,7 +232,7 @@ export function BillDetails({ id }: BillDetailsProps) {
                         if (durationInMinutes < 0) durationInMinutes += 24 * 60; // Handle overnight sessions
                         return (
                           <span>
-                            {formatTime(player.startTime)} - {formatTime(player.endTime)} • ({formatDuration(durationInMinutes)})
+                            {formatTime(player.startTime)} - {formatTime(player.endTime)} - ({formatDuration(durationInMinutes)})
                           </span>
                         );
                       })()}
@@ -188,9 +242,9 @@ export function BillDetails({ id }: BillDetailsProps) {
                   )}
                 </div>
                 {player.consumables.length > 0 && (
-                  <div>
-                    <div className="text-sm font-medium mb-1 text-gray-800 dark:text-gray-200">{t.additionalItems}:</div>
-                    <ul className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="mt-3 rounded-none bg-slate-50 px-3 py-3 dark:bg-slate-900/60">
+                    <div className="mb-2 text-sm font-medium text-slate-800 dark:text-slate-200">{t.additionalItems}</div>
+                    <ul className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
                       {player.consumables.map((item) => (
                         <li key={item.id} className="flex justify-between">
                           <span>{item.name} x{item.quantity}</span>
@@ -203,61 +257,75 @@ export function BillDetails({ id }: BillDetailsProps) {
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        <div className="mt-6 border-t dark:border-gray-700 pt-4">
-          <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        <div className="mt-6 grid gap-4 border-t border-slate-200 pt-4 dark:border-slate-700 lg:grid-cols-[minmax(0,1fr)_auto]">
+          <section className="rounded-none border border-slate-200 p-4 dark:border-slate-700" aria-labelledby="share-bill-heading">
+            <h2 id="share-bill-heading" className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              {t.shareActions}
+            </h2>
+            <label htmlFor="share-bill-link" className="mt-3 block text-sm font-medium text-slate-700 dark:text-slate-200">
+              {t.shareLinkLabel}
+            </label>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t.shareLinkHint}</p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
               <input
+                id="share-bill-link"
                 type="text"
                 value={currentURL}
                 readOnly
-                className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-2 rounded border dark:border-gray-600 text-sm w-64 focus:outline-none"
+                aria-label={t.shareLinkLabel}
+                className="min-w-0 flex-1 rounded-none border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 focus-visible:ring-2 focus-visible:ring-blue-500/30"
               />
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(currentURL);
-                  setIsCopied(true);
-                  setTimeout(() => setIsCopied(false), 2000);
-                }}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors ${
+                type="button"
+                onClick={() => void handleCopyLink()}
+                aria-label={t.copyShareLinkLabel}
+                className={`inline-flex items-center justify-center gap-2 rounded-none px-3 py-2 text-sm font-medium transition-colors active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 ${
                   isCopied 
                     ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                    : 'bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600'
                 }`}
               >
                 {isCopied ? (
                   <>
                     <CheckIcon className="w-4 h-4" />
-                    <span>{t.urlCopied}</span>
+                    <RollingText>{t.urlCopied}</RollingText>
                   </>
                 ) : (
                   <>
                     <ClipboardCopyIcon className="w-4 h-4" />
-                    <span>{t.copyShareLink}</span>
+                    <RollingText>{t.copyShareLink}</RollingText>
                   </>
                 )}
               </button>
             </div>
+          </section>
 
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <section className="rounded-none border border-slate-200 p-4 dark:border-slate-700" aria-labelledby="manage-bill-heading">
+            <h2 id="manage-bill-heading" className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              {t.manageBill}
+            </h2>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row lg:flex-col">
               <button
+                type="button"
                 onClick={() => navigate('/calculator', { state: { initialData: bill } })}
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                className="inline-flex items-center justify-center gap-2 rounded-none bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 active:scale-[0.99] dark:bg-blue-500 dark:hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
               >
                 <RefreshCw size={18} />
-                {t.actions.recalculate}
+                <RollingText>{t.actions.recalculate}</RollingText>
               </button>
               <button
+                type="button"
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-none bg-red-600 px-4 py-2 text-white transition hover:bg-red-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-500 dark:hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
               >
                 <Trash2 size={18} />
-                {isDeleting ? t.loading : t.actions.delete}
+                <RollingText>{isDeleting ? t.loading : t.actions.delete}</RollingText>
               </button>
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </div>

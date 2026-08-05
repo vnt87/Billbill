@@ -1,10 +1,11 @@
 import { Player, ConsumableItem, PREDEFINED_ITEMS, PredefinedItemName } from '../types';
-import { PlusIcon, MinusIcon } from 'lucide-react';
+import { PlusIcon, MinusIcon, XIcon } from 'lucide-react';
 import * as Switch from '@radix-ui/react-switch';
 import { useEffect, useState, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import * as Ariakit from '@ariakit/react';
 import { NumericFormat } from 'react-number-format';
+import { RollingText } from './ui/RollingText';
 
 interface PlayerSelectionProps {
   players: Player[];
@@ -14,8 +15,6 @@ interface PlayerSelectionProps {
   onAddPlayer: () => void;
   onRemovePlayer: (playerIndex: number) => void;
 }
-
-import { XIcon } from 'lucide-react';
 
 export function PlayerSelection({ players, onPlayerChange, sessionStart, sessionEnd, onAddPlayer, onRemovePlayer }: PlayerSelectionProps) {
   const { t } = useLanguage();
@@ -54,22 +53,7 @@ export function PlayerSelection({ players, onPlayerChange, sessionStart, session
 
   const handleTimeChange = (index: number, field: 'startTime' | 'endTime', value: string) => {
     const newPlayers = [...players];
-    const player = newPlayers[index];
-    
-    if (field === 'startTime') {
-      // Ensure start time is within session bounds and not after end time
-      if (value < sessionStart) value = sessionStart;
-      if (value > sessionEnd) value = sessionEnd;
-      if (player.endTime && value > player.endTime) value = player.endTime;
-      player.startTime = value;
-    } else {
-      // Ensure end time is within session bounds and not before start time
-      if (value < sessionStart) value = sessionStart;
-      if (value > sessionEnd) value = sessionEnd;
-      if (player.startTime && value < player.startTime) value = player.startTime;
-      player.endTime = value;
-    }
-    
+    newPlayers[index][field] = value;
     onPlayerChange(newPlayers);
   };
 
@@ -156,18 +140,25 @@ export function PlayerSelection({ players, onPlayerChange, sessionStart, session
   // }, [editingItemName]);
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm space-y-4">
-      <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-4">{t.players}</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <section aria-labelledby="players-heading" className="rounded-none border border-slate-200 bg-white p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900">
+      <div className="mb-4">
+        <h2 id="players-heading" className="text-xl font-bold text-slate-950 dark:text-white">{t.players}</h2>
+      </div>
+
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {players.map((player, index) => (
-          <div key={player.id || index} className="space-y-3">
-            <div className="flex items-center">
+          <div
+            key={player.id || index}
+            className={`group rounded-none border transition-colors ${player.participated ? 'border-blue-300 bg-blue-50/60 dark:border-blue-800 dark:bg-blue-950/25' : 'border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/40'}`}
+          >
+            <div className="flex min-h-12 items-center px-3 py-2">
               <input
+                id={`player-${player.id}`}
                 type="checkbox"
                 checked={player.participated}
                 onChange={() => handlePlayerToggle(index)}
-                className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                aria-label={`${t.accessibility.selectPlayer}: ${player.name}`}
+                className="h-5 w-5 shrink-0 rounded-none border-slate-400 text-blue-700 focus:ring-blue-600 dark:border-slate-600 dark:bg-slate-900"
               />
               {editingPlayerIndex === index ? (
                 <input
@@ -179,70 +170,68 @@ export function PlayerSelection({ players, onPlayerChange, sessionStart, session
                   onKeyDown={e => {
                     if (e.key === 'Enter') setEditingPlayerIndex(null);
                   }}
-                  className="ml-2 px-2 py-1 border rounded text-gray-700 dark:text-gray-300 dark:bg-gray-700 dark:border-gray-600"
+                  aria-label={`${t.accessibility.editPlayer}: ${player.name}`}
+                  className="ml-2 min-w-0 flex-1 rounded-none border border-slate-300 bg-white px-2 py-1 text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
                   style={{ maxWidth: 160 }}
                 />
               ) : (
-                <span
-                  className="ml-2 px-2 py-1 cursor-pointer dark:text-gray-300"
+                <button
+                  type="button"
+                  className="ml-2 min-w-0 flex-1 truncate rounded-none px-1 py-1 text-left font-semibold text-slate-800 hover:text-blue-700 dark:text-slate-200 dark:hover:text-blue-300"
                   onClick={() => setEditingPlayerIndex(index)}
-                  tabIndex={0}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ' ') setEditingPlayerIndex(index);
-                  }}
-                  role="button"
-                  aria-label={t.addPlayerButtonLabel}
+                  aria-label={`${t.accessibility.editPlayer}: ${player.name}`}
                 >
                   {player.name}
-                </span>
+                </button>
               )}
               <button
                 type="button"
                 onClick={() => onRemovePlayer(index)}
-                className="ml-2 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900"
-                aria-label={t.removePlayerButtonLabel}
+                className="ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-none text-slate-400 opacity-70 transition hover:bg-red-100 hover:text-red-700 active:scale-[0.98] sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 dark:hover:bg-red-950 dark:hover:text-red-300"
+                aria-label={`${t.removePlayerButtonLabel}: ${player.name}`}
               >
-                <XIcon className="w-4 h-4 text-red-500" />
+                <XIcon className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
             {player.participated && (
-              <div className="pl-6 space-y-3">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm text-gray-600 dark:text-gray-400">{t.fullSession}</label>
-                  <Switch.Root
-                    checked={player.isFullSession}
-                    onCheckedChange={() => handleFullSessionToggle(index)}
-                    className="w-11 h-6 bg-gray-200 rounded-full relative dark:bg-gray-700 data-[state=checked]:bg-indigo-600"
-                  >
-                    <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform duration-100 translate-x-1 data-[state=checked]:translate-x-6" />
-                  </Switch.Root>
+              <div className="space-y-4 border-t border-blue-200 px-3 pb-4 pt-3 dark:border-blue-900">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-600 dark:text-slate-400">{t.fullSession}</span>
+                  <div className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2">
+                    <Switch.Root
+                      checked={player.isFullSession}
+                      onCheckedChange={() => handleFullSessionToggle(index)}
+                      aria-label={`${t.fullSession}: ${player.name}`}
+                      className="relative h-6 min-h-0 w-11 rounded-none bg-slate-300 transition-colors data-[state=checked]:bg-blue-700 dark:bg-slate-700"
+                    >
+                      <Switch.Thumb className="block h-4 w-4 translate-x-1 rounded-none bg-white shadow-sm transition-transform data-[state=checked]:translate-x-6" />
+                    </Switch.Root>
+                  </div>
                 </div>
 
                 {!player.isFullSession && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                      <label className="block text-sm text-gray-600 dark:text-gray-400">{t.startTime}</label>
+                      <label htmlFor={`player-start-${player.id}`} className="block text-sm font-medium text-slate-600 dark:text-slate-400">{t.startTime}</label>
                       <input
+                        id={`player-start-${player.id}`}
                         type="time"
                         pattern="[0-9]{2}:[0-9]{2}"
                         value={player.startTime}
-                        min={sessionStart}
-                        max={player.endTime || sessionEnd}
                         onChange={(e) => handleTimeChange(index, 'startTime', e.target.value)}
-                        className="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        className="mt-1 block w-full rounded-none border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-600 dark:text-gray-400">{t.endTime}</label>
+                      <label htmlFor={`player-end-${player.id}`} className="block text-sm font-medium text-slate-600 dark:text-slate-400">{t.endTime}</label>
                       <input
+                        id={`player-end-${player.id}`}
                         type="time"
                         pattern="[0-9]{2}:[0-9]{2}"
                         value={player.endTime}
-                        min={player.startTime || sessionStart}
-                        max={sessionEnd}
                         onChange={(e) => handleTimeChange(index, 'endTime', e.target.value)}
-                        className="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        className="mt-1 block w-full rounded-none border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                       />
                     </div>
                   </div>
@@ -251,19 +240,21 @@ export function PlayerSelection({ players, onPlayerChange, sessionStart, session
                 {/* Additional Items Section */}
                 <div className="space-y-2 w-full">
                   <div className="flex justify-between items-center">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t.additionalItems}</label>
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t.additionalItems}</span>
                     <button
+                      type="button"
                       onClick={() => addConsumable(index)}
-                      className="p-1 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                      aria-label={`${t.accessibility.addItem}: ${player.name}`}
+                      className="flex h-9 w-9 items-center justify-center rounded-none text-blue-700 hover:bg-blue-100 active:scale-[0.98] dark:text-blue-300 dark:hover:bg-blue-950"
                     >
-                      <PlusIcon className="h-4 w-4" />
+                      <PlusIcon className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </div>
                   
                   {player.consumables?.map((item, itemIndex) => (
-                    <div key={item.id} className="grid grid-cols-12 gap-2 items-end w-full">
-                      <div className="col-span-5">
-                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">{t.item}</label>
+                    <div key={item.id} className="grid grid-cols-12 gap-2 items-end w-full rounded-none bg-white p-2 dark:bg-slate-900">
+                      <div className="col-span-12 sm:col-span-5">
+                        <label htmlFor={`player-item-name-${item.id}`} className="block text-xs text-slate-600 dark:text-slate-400 mb-1">{t.item}</label>
                         <Ariakit.ComboboxProvider
                           value={item.name}
                           setValue={value => {
@@ -281,17 +272,19 @@ export function PlayerSelection({ players, onPlayerChange, sessionStart, session
                           }}
                         >
                           <Ariakit.Combobox
-                            className="w-full border rounded p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            id={`player-item-name-${item.id}`}
+                            aria-label={`${t.item}: ${player.name}`}
+                            className="w-full rounded-none border border-slate-300 bg-white p-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                             placeholder="Select or type an item"
                           />
                           <Ariakit.ComboboxPopover
-                            className="bg-white dark:bg-gray-700 border rounded shadow-md max-h-60 overflow-auto z-10 w-full"
+                            className="z-50 max-h-60 w-full overflow-auto rounded-none border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900"
                           >
                             {["Coke", "Nước Suối", "Bò Húc", "Bánh Mì", "Mì Xào", "Trà Sữa", "Trà Chanh"].map(option => (
                               <Ariakit.ComboboxItem
                                 key={option}
                                 value={option}
-                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-gray-900 dark:text-white"
+                                className="cursor-pointer p-2 text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800"
                               >
                                 {option}
                               </Ariakit.ComboboxItem>
@@ -300,36 +293,42 @@ export function PlayerSelection({ players, onPlayerChange, sessionStart, session
                         </Ariakit.ComboboxProvider>
                       </div>
 
-                      <div className="col-span-3">
-                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">{t.quantity}</label>
+                      <div className="col-span-5 sm:col-span-3">
+                        <label htmlFor={`player-item-quantity-${item.id}`} className="block text-xs text-slate-600 dark:text-slate-400 mb-1">{t.quantity}</label>
                         <NumericFormat
+                          id={`player-item-quantity-${item.id}`}
                           value={item.quantity}
                           onValueChange={(values: { value: string }) => updateConsumable(index, itemIndex, 'quantity', values.value ? parseInt(values.value) : 1)}
                           allowNegative={false}
                           decimalScale={0}
-                          className="w-full border rounded p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          aria-label={`${t.quantity}: ${item.name}`}
+                          className="w-full rounded-none border border-slate-300 bg-white p-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                           customInput={props => <input {...props} type="number" min="1" />}
                         />
                       </div>
 
-                      <div className="col-span-3">
-                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">{t.cost}</label>
+                      <div className="col-span-5 sm:col-span-3">
+                        <label htmlFor={`player-item-cost-${item.id}`} className="block text-xs text-slate-600 dark:text-slate-400 mb-1">{t.cost}</label>
                         <NumericFormat
+                          id={`player-item-cost-${item.id}`}
                           value={item.costPerUnit}
-                          onValueChange={(values: { value: string }) => updateConsumable(index, itemIndex, 'costPerUnit', values.value ? parseInt(values.value) : 15)}
+                          onValueChange={(values: { value: string }) => updateConsumable(index, itemIndex, 'costPerUnit', values.value ? parseInt(values.value) : 0)}
                           allowNegative={false}
                           decimalScale={0}
-                          className="w-full border rounded p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                          customInput={props => <input {...props} type="number" min="15" step="5" />}
+                          aria-label={`${t.cost}: ${item.name}`}
+                          className="w-full rounded-none border border-slate-300 bg-white p-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                          customInput={props => <input {...props} type="number" min="0" />}
                         />
                       </div>
 
-                      <div className="col-span-1 flex items-center">
+                      <div className="col-span-2 sm:col-span-1 flex items-center justify-end">
                         <button
+                          type="button"
                           onClick={() => removeConsumable(index, itemIndex)}
-                          className="p-2 text-red-600 hover:text-red-700"
+                          aria-label={`${t.accessibility.removeItem}: ${item.name}`}
+                          className="flex h-10 w-10 items-center justify-center rounded-none text-red-700 hover:bg-red-100 active:scale-[0.98] dark:text-red-300 dark:hover:bg-red-950"
                         >
-                          <MinusIcon className="h-4 w-4" />
+                          <MinusIcon className="h-4 w-4" aria-hidden="true" />
                         </button>
                       </div>
                     </div>
@@ -341,17 +340,17 @@ export function PlayerSelection({ players, onPlayerChange, sessionStart, session
         ))}
       </div>
 
-      <div className="flex justify-center">
+      <div className="mt-4 flex justify-start">
         <button
           type="button"
           onClick={onAddPlayer}
-          className="px-4 py-2 rounded bg-indigo-600 text-white text-sm hover:bg-indigo-700 flex items-center gap-2"
+          className="rolling-text-trigger flex min-h-11 items-center gap-2 rounded-none border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800"
           aria-label={t.addPlayerButtonLabel}
         >
-          <PlusIcon className="w-4 h-4" />
-          {t.addPlayerButton}
+          <PlusIcon className="w-4 h-4" aria-hidden="true" />
+          <RollingText>{t.addPlayerButton}</RollingText>
         </button>
       </div>
-    </div>
+    </section>
   );
 }

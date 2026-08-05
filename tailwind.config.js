@@ -8,7 +8,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Bai Jamjuree', 'sans-serif'],
+        sans: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+        heading: ['Space Grotesk', 'system-ui', 'sans-serif'],
       },
     },
   },

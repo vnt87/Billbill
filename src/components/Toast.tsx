@@ -21,7 +21,7 @@ export function Toast({ message, isVisible, onClose, duration = 3000 }: ToastPro
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <div className="bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm">
+      <div className="bg-slate-800 text-white px-4 py-2 rounded-none shadow-lg text-sm">
         {message}
       </div>
     </div>

@@ -22,7 +22,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     try {
       const result = await listTournamentsService(context.env.TOURNAMENT_DB);
       return jsonSuccess(result.data, result.version, 200);
-    } catch {
+    } catch (error: any) {
+      console.error('Error listing tournaments:', error);
       return jsonError('INTERNAL_ERROR', 'Internal server error', 500);
     }
   }
@@ -50,7 +51,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     }
 
     return jsonSuccess(result.data, result.version, 201);
-  } catch (error) {
-    return jsonError('INTERNAL_ERROR', 'Internal server error', 500);
+  } catch (error: any) {
+    console.error('Error creating tournament:', error);
+    return jsonError('INTERNAL_ERROR', `Internal server error: ${error?.message || 'Unknown error'}`, 500);
   }
 };

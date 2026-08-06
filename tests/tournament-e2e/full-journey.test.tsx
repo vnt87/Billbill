@@ -164,7 +164,7 @@ describe('Full End-to-End Tournament User Journey Simulation', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Create Tournament|Tạo Giải Đấu/i }));
     const nameInput = await screen.findByPlaceholderText(/Friday Club Cup|Giải Bi-a Thứ 6/i);
     fireEvent.change(nameInput, { target: { value: 'Billiard Club Championship 2026' } });
-    fireEvent.change(screen.getByPlaceholderText(/At least 8 characters|Ít nhất 8 ký tự/i), { target: { value: 'secret_passphrase' } });
+    fireEvent.change(screen.getByPlaceholderText(/At least 3 characters|Ít nhất 3 ký tự/i), { target: { value: 'secret_passphrase' } });
 
     // Verify seed randomization button exists and works
     const randomizeBtn = screen.getByRole('button', { name: /Randomize|Bốc Thăm/i });

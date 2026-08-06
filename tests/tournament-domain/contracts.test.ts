@@ -76,14 +76,14 @@ describe('Tournament Domain Contracts & Validation', () => {
     expect(res.code).toBe('TEAM_ROSTER_REQUIRED');
   });
 
-  it('requires a management passphrase longer than three characters', () => {
+  it('requires a management passphrase of at least 3 characters', () => {
     const base = {
       name: 'Passphrase Cup', format: 'single_elimination' as const, entrantType: 'individual' as const,
       defaultBestOf: 3, entrants: [{ name: 'A', seed: 1, roster: [] }, { name: 'B', seed: 2, roster: [] }],
     };
     expect(validateCreateTournamentInput({ ...base, managementPassphrase: '   ' }).code).toBe('INVALID_PASSPHRASE');
-    expect(validateCreateTournamentInput({ ...base, managementPassphrase: 'abc' }).code).toBe('INVALID_PASSPHRASE');
-    expect(validateCreateTournamentInput({ ...base, managementPassphrase: '12345678' }).valid).toBe(true);
+    expect(validateCreateTournamentInput({ ...base, managementPassphrase: 'ab' }).code).toBe('INVALID_PASSPHRASE');
+    expect(validateCreateTournamentInput({ ...base, managementPassphrase: 'abc' }).valid).toBe(true);
   });
 
   it('proves toPublicDto recursively removes private notes and tokens', () => {

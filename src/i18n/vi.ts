@@ -131,7 +131,7 @@ export const vi = {
     noTournamentsHint: 'Tạo giải đấu đầu tiên để bắt đầu theo dõi các trận đấu.',
     manage: 'Quản lý',
     managementPassphraseLabel: 'Mật khẩu quản lý',
-    managementPassphrasePlaceholder: 'Ít nhất 8 ký tự',
+    managementPassphrasePlaceholder: 'Ít nhất 3 ký tự',
     managementPassphraseHint: 'Cần mật khẩu này để mở trang quản lý.',
     accessTournament: 'Quản lý giải đấu',
     accessHint: 'Nhập mật khẩu quản lý để tiếp tục.',

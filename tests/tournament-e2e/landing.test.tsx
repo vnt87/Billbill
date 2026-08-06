@@ -55,7 +55,7 @@ describe('Tournament Creation & Navigation — Phase 6 & 7', () => {
 
     const nameInput = screen.getByPlaceholderText(/Friday Club Cup|Giải Bi-a Thứ 6/i);
     fireEvent.change(nameInput, { target: { value: 'Sunday Showdown' } });
-    fireEvent.change(screen.getByPlaceholderText(/At least 8 characters|Ít nhất 8 ký tự/i), { target: { value: 'secret_passphrase' } });
+    fireEvent.change(screen.getByPlaceholderText(/At least 3 characters|Ít nhất 3 ký tự/i), { target: { value: 'secret_passphrase' } });
 
     const createButtons = screen.getAllByRole('button', { name: /Create Tournament|Tạo Giải Đấu/i });
     const submitButton = createButtons[createButtons.length - 1];

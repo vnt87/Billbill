@@ -131,7 +131,7 @@ export const en = {
     noTournamentsHint: 'Create your first tournament to start tracking matches.',
     manage: 'Manage',
     managementPassphraseLabel: 'Management Passphrase',
-    managementPassphrasePlaceholder: 'At least 8 characters',
+    managementPassphrasePlaceholder: 'At least 3 characters',
     managementPassphraseHint: 'This passphrase is required to open the management page.',
     accessTournament: 'Manage tournament',
     accessHint: 'Enter the management passphrase to continue.',

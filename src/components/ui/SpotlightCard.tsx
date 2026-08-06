@@ -1,7 +1,7 @@
 import type { ForwardedRef, HTMLAttributes, PointerEvent, ReactNode } from 'react';
 import { createElement, forwardRef, useImperativeHandle, useRef } from 'react';
 
-type SpotlightElement = 'article' | 'aside' | 'div' | 'section';
+type SpotlightElement = 'article' | 'aside' | 'div' | 'section' | 'form';
 
 interface SpotlightCardProps extends HTMLAttributes<HTMLElement> {
   as?: SpotlightElement;

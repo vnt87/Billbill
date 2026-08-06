@@ -1,4 +1,4 @@
-import { Github, Sun, Moon, Calculator, ClockIcon } from 'lucide-react';
+import { Github, Sun, Moon, Calculator, ClockIcon, Heart, Trophy } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Link, useLocation } from 'react-router-dom';
 import { RollingText } from './ui/RollingText';
@@ -15,6 +15,9 @@ export function Layout({ children, isDarkMode, setIsDarkMode }: LayoutProps) {
   const isActive = (path: string) => {
     if (path === '/') {
       return location.pathname === '/' || location.pathname === '/calculator';
+    }
+    if (path === '/tournaments') {
+      return location.pathname.startsWith('/tournaments');
     }
     return location.pathname === path ||
       (path === '/history' && location.pathname.startsWith('/bill/'));
@@ -58,6 +61,20 @@ export function Layout({ children, isDarkMode, setIsDarkMode }: LayoutProps) {
                 <ClockIcon size={20} />
                 <RollingText className="hidden sm:inline">{t.navigation.history}</RollingText>
               </Link>
+              <Link
+                to="/tournaments"
+                aria-label={t.navigation.tournament}
+                aria-current={isActive('/tournaments') ? 'page' : undefined}
+                title={t.navigation.tournament}
+                className={`rolling-text-trigger h-10 px-2.5 sm:px-3 rounded-none flex items-center gap-2 font-medium ${
+                  isActive('/tournaments')
+                    ? 'bg-blue-700 text-white'
+                    : 'bg-white text-slate-700 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800'
+                } transition-colors active:scale-[0.98]`}
+              >
+                <Trophy size={20} />
+                <RollingText className="hidden sm:inline">{t.navigation.tournament}</RollingText>
+              </Link>
             </nav>
             <button
               onClick={() => setLanguage(language === 'en' ? 'vi' : 'en')}
@@ -82,17 +99,28 @@ export function Layout({ children, isDarkMode, setIsDarkMode }: LayoutProps) {
       </div>
       
       <footer className="mt-8 text-center">
-        <div className="py-4 text-sm text-slate-600 dark:text-slate-400">
-          Built by Nam Vu
-          <span aria-hidden="true" className="mx-2">|</span>
-          <a 
-            href="https://github.com/vnt87/Billbill" 
-            className="inline-flex items-center gap-1 hover:text-blue-700 dark:hover:text-blue-300"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Github size={14} /> Source code
-          </a>
+        <div className="py-4 text-sm text-slate-600 dark:text-slate-400 flex flex-col items-center gap-1">
+          <div>
+            Built with <Heart className="inline text-red-500 fill-red-500 mx-0.5" size={14} /> by{' '}
+            <a
+              href="https://namvu.net"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline font-medium"
+            >
+              Nam Vu
+            </a>
+          </div>
+          <div>
+            <a 
+              href="https://github.com/vnt87/Billbill" 
+              className="inline-flex items-center gap-1 hover:text-blue-700 dark:hover:text-blue-300"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Github size={14} /> Source code
+            </a>
+          </div>
         </div>
       </footer>
     </div>

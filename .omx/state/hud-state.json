@@ -1,5 +1,5 @@
 {
-  "last_turn_at": "2026-08-05T10:43:09.954Z",
-  "turn_count": 21,
-  "last_agent_output": "Updated the spotlight effect so the card edges glow substantially stronger than the interior.\n\n- Add"
+  "last_turn_at": "2026-08-06T05:09:22.059Z",
+  "turn_count": 47,
+  "last_agent_output": "Implemented match scoreboard detail pages.\n\nHighlights:\n\n- Added admin/public match routes.\n- Added "
 }

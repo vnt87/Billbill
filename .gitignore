@@ -7,3 +7,4 @@ wrangler.toml
 .gitignore
 /.env
 /.wrangler
+.omx/logs

@@ -7,6 +7,7 @@ import { BillDetails } from './components/pages/BillDetails';
 import { Layout } from './components/Layout';
 
 const TournamentLanding = lazy(() => import('./features/tournaments/pages/TournamentLanding'));
+const TournamentMigration = lazy(() => import('./features/tournaments/pages/TournamentMigration'));
 const TournamentAdmin = lazy(() => import('./features/tournaments/pages/TournamentAdmin'));
 const TournamentPublic = lazy(() => import('./features/tournaments/pages/TournamentPublic'));
 const MatchScoreboardPage = lazy(() => import('./features/tournaments/pages/MatchScoreboardPage'));
@@ -52,6 +53,7 @@ function App() {
             <Route path="/history" element={<History />} />
             <Route path="/bill/:id" element={<BillDetailsWrapper />} />
             <Route path="/tournaments" element={<TournamentLanding />} />
+            <Route path="/tournaments/migrate/:legacyToken" element={<TournamentMigration />} />
             <Route path="/tournaments/manage/:adminToken" element={<TournamentAdmin />} />
             <Route path="/tournaments/manage/:adminToken/matches/:matchId" element={<MatchScoreboardPage mode="admin" />} />
             <Route path="/tournaments/view/:publicToken" element={<TournamentPublic />} />

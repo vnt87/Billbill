@@ -6,6 +6,8 @@ import {
   UpdateTournamentRequest,
   MatchMutationRequest,
   ApiResponse,
+  TournamentListDto,
+  TournamentAccessResponse,
 } from '../../../../shared/tournaments/contracts';
 
 async function request<T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> {
@@ -72,6 +74,24 @@ export async function createTournament(
   return request<CreateTournamentResponseData>('/api/tournaments', {
     method: 'POST',
     body: JSON.stringify(input),
+  });
+}
+
+export async function listTournaments(): Promise<ApiResponse<TournamentListDto>> {
+  return request<TournamentListDto>('/api/tournaments', { method: 'GET' });
+}
+
+export async function accessTournament(publicId: string, passphrase: string): Promise<ApiResponse<TournamentAccessResponse>> {
+  return request<TournamentAccessResponse>(`/api/tournaments/access/${publicId}`, {
+    method: 'POST',
+    body: JSON.stringify({ passphrase }),
+  });
+}
+
+export async function migrateTournament(legacyToken: string, passphrase: string): Promise<ApiResponse<TournamentAccessResponse>> {
+  return request<TournamentAccessResponse>(`/api/tournaments/migrate/${legacyToken}`, {
+    method: 'POST',
+    body: JSON.stringify({ passphrase }),
   });
 }
 

@@ -23,6 +23,32 @@ export function validateTournamentName(name: string): ValidationResult {
   return { valid: true };
 }
 
+export function validateManagementPassphrase(passphrase: string): ValidationResult {
+  if (typeof passphrase !== 'string') {
+    return {
+      valid: false,
+      code: 'INVALID_PASSPHRASE',
+      message: 'Management passphrase must be a string',
+    };
+  }
+  const trimmed = passphrase.trim();
+  if (trimmed.length < BOUNDS.MIN_MANAGEMENT_PASSPHRASE_LENGTH) {
+    return {
+      valid: false,
+      code: 'INVALID_PASSPHRASE',
+      message: `Management passphrase must be at least ${BOUNDS.MIN_MANAGEMENT_PASSPHRASE_LENGTH} characters`,
+    };
+  }
+  if (trimmed.length > BOUNDS.MAX_MANAGEMENT_PASSPHRASE_LENGTH) {
+    return {
+      valid: false,
+      code: 'INVALID_PASSPHRASE',
+      message: `Management passphrase cannot exceed ${BOUNDS.MAX_MANAGEMENT_PASSPHRASE_LENGTH} characters`,
+    };
+  }
+  return { valid: true };
+}
+
 export function validateBestOf(bestOf: number): ValidationResult {
   if (!BOUNDS.ALLOWED_BEST_OF.includes(bestOf as any)) {
     return {
@@ -111,6 +137,11 @@ export function validateCreateTournamentInput(input: CreateTournamentInput): Val
 
   const bestOfVal = validateBestOf(input.defaultBestOf);
   if (!bestOfVal.valid) return bestOfVal;
+
+  if (input.managementPassphrase) {
+    const passphraseVal = validateManagementPassphrase(input.managementPassphrase);
+    if (!passphraseVal.valid) return passphraseVal;
+  }
 
   return validateEntrantsList(input.entrants, input.entrantType);
 }

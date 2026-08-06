@@ -10,6 +10,7 @@ describe('Tournament Domain Contracts & Validation', () => {
       format: 'single_elimination',
       entrantType: 'individual',
       defaultBestOf: 3,
+      managementPassphrase: 'secret',
       entrants: [
         { name: 'Player 1', seed: 1, roster: [] },
         { name: 'Player 2', seed: 2, roster: [] },
@@ -25,6 +26,7 @@ describe('Tournament Domain Contracts & Validation', () => {
       format: 'single_elimination',
       entrantType: 'individual',
       defaultBestOf: 4, // Must be odd 1-15
+      managementPassphrase: 'secret',
       entrants: [
         { name: 'Player 1', seed: 1, roster: [] },
         { name: 'Player 2', seed: 2, roster: [] },
@@ -40,6 +42,7 @@ describe('Tournament Domain Contracts & Validation', () => {
       format: 'single_elimination',
       entrantType: 'individual',
       defaultBestOf: 3,
+      managementPassphrase: 'secret_passphrase',
       entrants: [{ name: 'Player 1', seed: 1, roster: [] }],
     });
     expect(resUnder.valid).toBe(false);
@@ -50,6 +53,7 @@ describe('Tournament Domain Contracts & Validation', () => {
       format: 'single_elimination',
       entrantType: 'individual',
       defaultBestOf: 3,
+      managementPassphrase: 'secret_passphrase',
       entrants: Array.from({ length: 33 }, (_, i) => ({ name: `Player ${i + 1}`, seed: i + 1, roster: [] })),
     });
     expect(resOver.valid).toBe(false);
@@ -62,6 +66,7 @@ describe('Tournament Domain Contracts & Validation', () => {
       format: 'single_elimination',
       entrantType: 'team',
       defaultBestOf: 3,
+      managementPassphrase: 'secret_passphrase',
       entrants: [
         { name: 'Team Alpha', seed: 1, roster: [] }, // Empty roster!
         { name: 'Team Beta', seed: 2, roster: ['Bob'] },
@@ -69,6 +74,16 @@ describe('Tournament Domain Contracts & Validation', () => {
     });
     expect(res.valid).toBe(false);
     expect(res.code).toBe('TEAM_ROSTER_REQUIRED');
+  });
+
+  it('requires a management passphrase longer than three characters', () => {
+    const base = {
+      name: 'Passphrase Cup', format: 'single_elimination' as const, entrantType: 'individual' as const,
+      defaultBestOf: 3, entrants: [{ name: 'A', seed: 1, roster: [] }, { name: 'B', seed: 2, roster: [] }],
+    };
+    expect(validateCreateTournamentInput({ ...base, managementPassphrase: '   ' }).code).toBe('INVALID_PASSPHRASE');
+    expect(validateCreateTournamentInput({ ...base, managementPassphrase: 'abc' }).code).toBe('INVALID_PASSPHRASE');
+    expect(validateCreateTournamentInput({ ...base, managementPassphrase: '12345678' }).valid).toBe(true);
   });
 
   it('proves toPublicDto recursively removes private notes and tokens', () => {

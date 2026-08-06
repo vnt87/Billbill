@@ -22,14 +22,17 @@ describe('Tournament Creation & Navigation — Phase 6 & 7', () => {
 
   it('renders tournament landing creation form', () => {
     render(<TestLanding />);
-    const headings = screen.getAllByText(/Create a Tournament|Tạo Giải Đấu/i);
+    const headings = screen.getAllByText(/Create Tournament|Tạo Giải Đấu/i);
     expect(headings.length).toBeGreaterThan(0);
   });
 
   it('allows filling form and submitting tournament creation', async () => {
     // Mock fetch
-    vi.spyOn(global, 'fetch').mockImplementation(async (url) => {
+    vi.spyOn(global, 'fetch').mockImplementation(async (url, options) => {
       const urlStr = url.toString();
+      if (urlStr.endsWith('/api/tournaments') && (options?.method || 'GET') === 'GET') {
+        return new Response(JSON.stringify({ data: { tournaments: [] }, version: 1 }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
       if (urlStr.includes('/api/tournaments')) {
         return new Response(
           JSON.stringify({
@@ -48,14 +51,17 @@ describe('Tournament Creation & Navigation — Phase 6 & 7', () => {
 
     render(<TestLanding />);
 
+    fireEvent.click(await screen.findByRole('button', { name: /Create Tournament|Tạo Giải Đấu/i }));
+
     const nameInput = screen.getByPlaceholderText(/Friday Club Cup|Giải Bi-a Thứ 6/i);
     fireEvent.change(nameInput, { target: { value: 'Sunday Showdown' } });
+    fireEvent.change(screen.getByPlaceholderText(/At least 8 characters|Ít nhất 8 ký tự/i), { target: { value: 'secret_passphrase' } });
 
-    const submitButton = screen.getByRole('button', { name: /Create Tournament|Tạo Giải Đấu/i });
+    const createButtons = screen.getAllByRole('button', { name: /Create Tournament|Tạo Giải Đấu/i });
+    const submitButton = createButtons[createButtons.length - 1];
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getAllByText(/Admin Link|Link Quản Lý/i).length).toBeGreaterThan(0);
       expect(screen.getAllByText(/Spectator Link|Link Xem Direct/i).length).toBeGreaterThan(0);
     });
   });

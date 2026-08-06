@@ -218,4 +218,33 @@ describe('Match scoreboard detail pages', () => {
     expect(screen.queryByRole('button', { name: 'Increase score for Alice' })).not.toBeInTheDocument();
     expect(screen.queryByText('private')).not.toBeInTheDocument();
   });
+
+  it('provides a share button for individual matches', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(new Response(JSON.stringify({
+      data: {
+        id: 't-1', name: 'Share Match Cup', format: 'single_elimination', entrantType: 'individual', status: 'active', defaultBestOf: 3,
+        version: 1, createdAt: '2026-08-06T00:00:00Z', updatedAt: '2026-08-06T00:00:00Z', entrants: aggregate.entrants,
+        matches: [{ ...aggregate.matches[0], tournamentId: undefined, scoreA: 2, scoreB: 1, winnerId: 'e-1', state: 'completed' }], standings: [],
+      }, version: 1,
+    }), { status: 200 }));
+
+    if (!navigator.clipboard) {
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: () => Promise.resolve() },
+        configurable: true,
+        writable: true,
+      });
+    }
+    const writeTextSpy = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
+
+    const user = userEvent.setup();
+    render(<LanguageProvider><MemoryRouter initialEntries={['/tournaments/view/pub_1/matches/m-1']}><Routes><Route path="/tournaments/view/:publicToken/matches/:matchId" element={<MatchPublicScoreboardPage />} /></Routes></MemoryRouter></LanguageProvider>);
+    
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Share Match Cup' })).toBeInTheDocument());
+    const shareButton = screen.getByRole('button', { name: /Share Match|Chia Sẻ Trận/i });
+    expect(shareButton).toBeInTheDocument();
+
+    await user.click(shareButton);
+    expect(writeTextSpy).toHaveBeenCalledWith(expect.stringContaining('/tournaments/view/pub_1/matches/m-1'));
+  });
 });

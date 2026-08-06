@@ -1,5 +1,5 @@
 import { D1Database } from '@cloudflare/workers-types';
-import { createTournamentService } from '../../_shared/tournaments/service';
+import { createTournamentService, listTournamentsService } from '../../_shared/tournaments/service';
 import { jsonSuccess, jsonError } from '../../_shared/tournaments/responses';
 import { CreateTournamentInput } from '../../../shared/tournaments/contracts';
 
@@ -16,6 +16,15 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         'Access-Control-Allow-Headers': 'Content-Type',
       },
     });
+  }
+
+  if (context.request.method === 'GET') {
+    try {
+      const result = await listTournamentsService(context.env.TOURNAMENT_DB);
+      return jsonSuccess(result.data, result.version, 200);
+    } catch {
+      return jsonError('INTERNAL_ERROR', 'Internal server error', 500);
+    }
   }
 
   if (context.request.method !== 'POST') {

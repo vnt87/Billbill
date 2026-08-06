@@ -218,7 +218,8 @@ button:disabled {
 
 .match-scoreboard-page__topline { margin-bottom: 1rem; }
 .scoreboard-back,
-.scoreboard-refresh {
+.scoreboard-refresh,
+.scoreboard-share {
   display: inline-flex;
   align-items: center;
   gap: .45rem;
@@ -229,9 +230,12 @@ button:disabled {
   text-transform: uppercase;
 }
 .dark .scoreboard-back,
-.dark .scoreboard-refresh { color: rgb(203 213 225); }
-.scoreboard-back:hover { color: rgb(180 83 9); }
-.scoreboard-refresh { border: 0; background: transparent; cursor: pointer; }
+.dark .scoreboard-refresh,
+.dark .scoreboard-share { color: rgb(203 213 225); }
+.scoreboard-back:hover,
+.scoreboard-share:hover { color: rgb(180 83 9); }
+.scoreboard-refresh,
+.scoreboard-share { border: 0; background: transparent; cursor: pointer; }
 
 .scoreboard-shell {
   position: relative;

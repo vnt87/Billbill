@@ -288,6 +288,7 @@ export function TournamentAdmin() {
             onUpdateNote={(mId, note) => handleMatchCommand(mId, { type: 'updatePrivateNote', note })}
             onOverrideBestOf={(mId, bestOf) => handleMatchCommand(mId, { type: 'overrideBestOf', bestOf })}
             matchHref={(match) => `/tournaments/manage/${adminToken}/matches/${match.id}`}
+            publicMatchHref={(match) => `${publicUrl}/matches/${match.id}`}
           />
         </div>
       )}

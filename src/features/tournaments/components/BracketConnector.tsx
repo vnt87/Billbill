@@ -16,7 +16,7 @@ export const BracketConnector: React.FC<BracketConnectorProps> = ({
   if (type === 'single') {
     return (
       <div className={`relative flex items-center justify-center w-8 sm:w-10 h-full ${className}`}>
-        <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full overflow-visible">
           <line
             x1="0"
             y1="50"
@@ -24,6 +24,7 @@ export const BracketConnector: React.FC<BracketConnectorProps> = ({
             y2="50"
             className="stroke-slate-300 dark:stroke-slate-700"
             strokeWidth="2"
+            vectorEffect="non-scaling-stroke"
           />
         </svg>
         {matchNumber !== undefined && (
@@ -37,12 +38,13 @@ export const BracketConnector: React.FC<BracketConnectorProps> = ({
 
   return (
     <div className={`relative flex items-center justify-center w-8 sm:w-10 h-full ${className}`}>
-      <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full overflow-visible">
         {/* Top horizontal leg */}
         <path
           d="M 0,25 L 50,25"
           className="stroke-slate-300 dark:stroke-slate-700"
           strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
           fill="none"
         />
         {/* Vertical joining bar */}
@@ -50,6 +52,7 @@ export const BracketConnector: React.FC<BracketConnectorProps> = ({
           d="M 50,25 L 50,75"
           className="stroke-slate-300 dark:stroke-slate-700"
           strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
           fill="none"
         />
         {/* Bottom horizontal leg */}
@@ -57,6 +60,7 @@ export const BracketConnector: React.FC<BracketConnectorProps> = ({
           d="M 0,75 L 50,75"
           className="stroke-slate-300 dark:stroke-slate-700"
           strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
           fill="none"
         />
         {/* Output horizontal stem to next round match */}
@@ -64,6 +68,7 @@ export const BracketConnector: React.FC<BracketConnectorProps> = ({
           d="M 50,50 L 100,50"
           className="stroke-slate-300 dark:stroke-slate-700"
           strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
           fill="none"
         />
       </svg>

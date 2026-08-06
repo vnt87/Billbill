@@ -3,7 +3,7 @@ import { Match, Entrant } from '../../../../shared/tournaments/types';
 import { BOUNDS } from '../../../../shared/tournaments/contracts';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { SpotlightCard } from '../../../components/ui/SpotlightCard';
-import { Check, Edit2, FileText, Lock, Trophy } from 'lucide-react';
+import { Check, Edit2, FileText, Lock, Share2, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface MatchCardProps {
@@ -16,6 +16,7 @@ interface MatchCardProps {
   onUpdateNote?: (matchId: string, note: string | null) => void;
   onOverrideBestOf?: (matchId: string, bestOf: number) => void;
   detailHref?: string;
+  shareHref?: string;
   matchNumber?: number;
   showMatchNumberOnLeft?: boolean;
 }
@@ -29,6 +30,7 @@ export function MatchCard({
   onUpdateNote,
   onOverrideBestOf,
   detailHref,
+  shareHref,
   matchNumber,
   showMatchNumberOnLeft = false,
 }: MatchCardProps) {
@@ -43,6 +45,40 @@ export function MatchCard({
   const [scoreB, setScoreB] = useState<number | ''>(match.scoreB !== null ? match.scoreB : '');
   const [note, setNote] = useState<string>(match.privateNote || '');
   const [showNoteEditor, setShowNoteEditor] = useState(false);
+  const [copiedMatchLink, setCopiedMatchLink] = useState(false);
+
+  const targetShareUrl = shareHref;
+
+  const handleShareMatch = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!targetShareUrl) return;
+
+    const fullUrl = window.location.origin + targetShareUrl;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(fullUrl);
+        setCopiedMatchLink(true);
+        setTimeout(() => setCopiedMatchLink(false), 2000);
+      } else {
+        const input = document.createElement('input');
+        input.value = fullUrl;
+        document.body.appendChild(input);
+        try {
+          input.select();
+          const success = document.execCommand('copy');
+          if (success) {
+            setCopiedMatchLink(true);
+            setTimeout(() => setCopiedMatchLink(false), 2000);
+          }
+        } finally {
+          document.body.removeChild(input);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to copy match URL:', err);
+    }
+  };
 
   const winsNeeded = Math.floor(match.bestOf / 2) + 1;
 
@@ -102,9 +138,26 @@ export function MatchCard({
         ) : (
           <span className="truncate uppercase tracking-wider">{match.side.replace('_', ' ')} • R{match.round} M{match.position}</span>
         )}
-        <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-mono">
-          BO{match.bestOf}
-        </span>
+        <div className="flex items-center gap-1 shrink-0">
+          {targetShareUrl && (
+            <button
+              type="button"
+              onClick={handleShareMatch}
+              className={`p-1 transition-colors ${
+                copiedMatchLink
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+              title={copiedMatchLink ? (t.tournament.copiedMatchLink || 'Copied!') : (t.tournament.shareMatch || 'Share Match')}
+              aria-label={t.tournament.shareMatch || 'Share Match'}
+            >
+              {copiedMatchLink ? <Check size={12} className="text-emerald-500" /> : <Share2 size={12} />}
+            </button>
+          )}
+          <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-mono">
+            BO{match.bestOf}
+          </span>
+        </div>
       </div>
 
       {/* Entrants & Scores List */}

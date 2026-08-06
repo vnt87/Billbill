@@ -6,6 +6,8 @@ export const BOUNDS = {
   MAX_NAME_LENGTH: 80,
   MAX_TOURNAMENT_NAME_LENGTH: 120,
   MAX_NOTE_LENGTH: 1000,
+  MIN_MANAGEMENT_PASSPHRASE_LENGTH: 8,
+  MAX_MANAGEMENT_PASSPHRASE_LENGTH: 120,
   ALLOWED_BEST_OF: [1, 3, 5, 7, 9, 11, 13, 15] as const,
 } as const;
 
@@ -20,8 +22,12 @@ export type ApiErrorCode =
   | 'INVALIDATION_CONFIRMATION_REQUIRED'
   | 'STALE_VERSION'
   | 'TOURNAMENT_NOT_FOUND'
+  | 'PASSPHRASE_REQUIRED'
+  | 'INVALID_PASSPHRASE'
+  | 'ACCESS_DENIED'
   | 'UNSUPPORTED_COMMAND'
   | 'INVALID_INPUT';
+
 
 export interface ApiSuccess<T> {
   data: T;
@@ -50,6 +56,26 @@ export interface CreateTournamentInput {
   entrantType: EntrantType;
   defaultBestOf: number;
   entrants: CreateEntrantInput[];
+  managementPassphrase?: string;
+}
+
+export interface TournamentSummary {
+  id: string;
+  publicId: string;
+  name: string;
+  format: TournamentFormat;
+  status: TournamentAggregate['tournament']['status'];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TournamentListDto {
+  tournaments: TournamentSummary[];
+}
+
+export interface TournamentAccessResponse {
+  managementToken: string;
+  adminUrl: string;
 }
 
 export interface CreateTournamentResponseData {

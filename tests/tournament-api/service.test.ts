@@ -6,6 +6,8 @@ import {
   getPublicTournamentService,
   updateMatchService,
   updateTournamentService,
+  accessTournamentService,
+  listTournamentsService,
 } from '../../functions/_shared/tournaments/service';
 
 describe('Tournament Service & API Integration — Phase 4 & 5', () => {
@@ -21,6 +23,7 @@ describe('Tournament Service & API Integration — Phase 4 & 5', () => {
       format: 'single_elimination',
       entrantType: 'individual',
       defaultBestOf: 3,
+      managementPassphrase: 'pool-secret',
       entrants: [
         { name: 'Alice', seed: 1, roster: [] },
         { name: 'Bob', seed: 2, roster: [] },
@@ -42,6 +45,7 @@ describe('Tournament Service & API Integration — Phase 4 & 5', () => {
       format: 'single_elimination',
       entrantType: 'individual',
       defaultBestOf: 3,
+      managementPassphrase: 'champ-secret',
       entrants: [
         { name: 'Alice', seed: 1, roster: [] },
         { name: 'Bob', seed: 2, roster: [] },
@@ -50,8 +54,10 @@ describe('Tournament Service & API Integration — Phase 4 & 5', () => {
 
     if ('error' in createRes) throw new Error('Create failed');
 
-    const adminToken = createRes.data.adminUrl.replace('/tournaments/manage/', '');
     const publicToken = createRes.data.publicUrl.replace('/tournaments/view/', '');
+    const accessRes = await (await import('../../functions/_shared/tournaments/service')).accessTournamentService(db, publicToken, 'champ-secret');
+    if ('error' in accessRes) throw new Error('Access failed');
+    const adminToken = accessRes.data.managementToken;
 
     // 2. Admin read
     const adminRead = await getAdminTournamentService(db, adminToken);
@@ -97,6 +103,7 @@ describe('Tournament Service & API Integration — Phase 4 & 5', () => {
       format: 'single_elimination',
       entrantType: 'individual',
       defaultBestOf: 3,
+      managementPassphrase: 'invalidate-secret',
       entrants: [
         { name: 'Alice', seed: 1, roster: [] },
         { name: 'Bob', seed: 2, roster: [] },
@@ -106,7 +113,10 @@ describe('Tournament Service & API Integration — Phase 4 & 5', () => {
     });
 
     if ('error' in createRes) throw new Error('Create failed');
-    const adminToken = createRes.data.adminUrl.replace('/tournaments/manage/', '');
+    const publicToken = createRes.data.publicUrl.replace('/tournaments/view/', '');
+    const accessRes = await (await import('../../functions/_shared/tournaments/service')).accessTournamentService(db, publicToken, 'invalidate-secret');
+    if ('error' in accessRes) throw new Error('Access failed');
+    const adminToken = accessRes.data.managementToken;
 
     const adminRead = await getAdminTournamentService(db, adminToken);
     if ('error' in adminRead) throw new Error('Admin read failed');
@@ -149,5 +159,22 @@ describe('Tournament Service & API Integration — Phase 4 & 5', () => {
     if ('data' in confirmedRes) {
       expect(confirmedRes.version).toBe(3);
     }
+  });
+
+  it('lists safe summaries and gates management access with the passphrase', async () => {
+    const created = await createTournamentService(db, {
+      name: 'Safe Summary Cup', format: 'round_robin', entrantType: 'individual', defaultBestOf: 3,
+      managementPassphrase: 'open-sesame', entrants: [{ name: 'A', seed: 1, roster: [] }, { name: 'B', seed: 2, roster: [] }],
+    });
+    if ('error' in created) throw new Error('Create failed');
+    const publicId = created.data.publicUrl.split('/').pop()!;
+    const list = await listTournamentsService(db);
+    expect(list.data.tournaments[0]).toMatchObject({ name: 'Safe Summary Cup', publicId });
+    expect(JSON.stringify(list.data)).not.toContain('open-sesame');
+    const denied = await accessTournamentService(db, publicId, 'wrong-passphrase');
+    expect('error' in denied && denied.error.code).toBe('ACCESS_DENIED');
+    const granted = await accessTournamentService(db, publicId, 'open-sesame');
+    expect('data' in granted).toBe(true);
+    if ('data' in granted) expect(granted.data.managementToken).toBeTruthy();
   });
 });

@@ -151,7 +151,7 @@ describe('Full End-to-End Tournament User Journey Simulation', () => {
         );
       }
 
-      return new Response(JSON.stringify({}), { status: 200 });
+      return new Response(JSON.stringify({ data: { tournaments: [] }, version: 1 }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     });
 
     const { unmount } = render(
@@ -161,15 +161,18 @@ describe('Full End-to-End Tournament User Journey Simulation', () => {
     );
 
     // Step A: Landing Creation Page
+    fireEvent.click(await screen.findByRole('button', { name: /Create Tournament|Tạo Giải Đấu/i }));
     const nameInput = await screen.findByPlaceholderText(/Friday Club Cup|Giải Bi-a Thứ 6/i);
     fireEvent.change(nameInput, { target: { value: 'Billiard Club Championship 2026' } });
+    fireEvent.change(screen.getByPlaceholderText(/At least 8 characters|Ít nhất 8 ký tự/i), { target: { value: 'secret_passphrase' } });
 
     // Verify seed randomization button exists and works
     const randomizeBtn = screen.getByRole('button', { name: /Randomize Seeds|Ngẫu Nhiên Hạt Giống/i });
     fireEvent.click(randomizeBtn);
 
     // Submit form
-    const createBtn = screen.getByRole('button', { name: /Create Tournament|Tạo Giải Đấu/i });
+    const createButtons = screen.getAllByRole('button', { name: /Create Tournament|Tạo Giải Đấu/i });
+    const createBtn = createButtons[createButtons.length - 1];
     fireEvent.submit(createBtn.closest('form')!);
 
     // Step B: Share Links screen appears

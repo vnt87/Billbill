@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, ChevronDown, ChevronUp, Edit3, FileText, Lock, RefreshCw, Save, Trophy } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Edit3, FileText, Lock, RefreshCw, Save, Share2, Trophy } from 'lucide-react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { getAdminTournament, getPublicTournament, updateMatch } from '../api/client';
 import { AdminTournamentDto, MatchCommand, PublicTournamentDto } from '../../../../shared/tournaments/contracts';
@@ -42,6 +42,7 @@ export function MatchScoreboardPage({ mode }: MatchScoreboardPageProps) {
   const [pendingCommand, setPendingCommand] = useState<MatchCommand | null>(null);
   const [note, setNote] = useState('');
   const [noteOpen, setNoteOpen] = useState(false);
+  const [copiedMatchLink, setCopiedMatchLink] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!token) return;
@@ -159,6 +160,37 @@ export function MatchScoreboardPage({ mode }: MatchScoreboardPageProps) {
     if (ok) setNoteOpen(false);
   };
 
+  const handleShareMatch = async () => {
+    if (!matchId) return;
+    const publicPath = mode === 'admin' && adminDto?.publicUrl
+      ? `${adminDto.publicUrl}/matches/${matchId}`
+      : `/tournaments/view/${publicToken}/matches/${matchId}`;
+    const urlToCopy = window.location.origin + publicPath;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(urlToCopy);
+        setCopiedMatchLink(true);
+        setTimeout(() => setCopiedMatchLink(false), 2000);
+      } else {
+        const input = document.createElement('input');
+        input.value = urlToCopy;
+        document.body.appendChild(input);
+        try {
+          input.select();
+          const success = document.execCommand('copy');
+          if (success) {
+            setCopiedMatchLink(true);
+            setTimeout(() => setCopiedMatchLink(false), 2000);
+          }
+        } finally {
+          document.body.removeChild(input);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to copy match link:', err);
+    }
+  };
+
   if (loading) return <div className="py-16 text-center"><RefreshCw size={28} className="animate-spin text-amber-600 mx-auto" /><p className="mt-3 text-sm text-slate-500">{t.loading}</p></div>;
   if (errorMsg || !match || (!adminDto && !publicDto)) {
     return <div className="scoreboard-error"><h1>{t.tournament.notFoundTitle}</h1><p>{errorMsg || t.tournament.notFoundHint}</p><button type="button" onClick={fetchData}>{t.retry}</button></div>;
@@ -171,7 +203,13 @@ export function MatchScoreboardPage({ mode }: MatchScoreboardPageProps) {
     <main className="match-scoreboard-page">
       <div className="match-scoreboard-page__topline">
         <Link to={backPath} className="scoreboard-back"><ArrowLeft size={16} aria-hidden="true" />{t.tournament.backToTournament}</Link>
-        <button type="button" onClick={fetchData} className="scoreboard-refresh"><RefreshCw size={15} aria-hidden="true" />{t.tournament.refresh}</button>
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={handleShareMatch} className="scoreboard-share" title={t.tournament.shareMatch}>
+            {copiedMatchLink ? <Check size={15} className="text-emerald-500" /> : <Share2 size={15} aria-hidden="true" />}
+            <span>{copiedMatchLink ? (t.tournament.copiedMatchLink || 'Copied!') : (t.tournament.shareMatch || 'Share Match')}</span>
+          </button>
+          <button type="button" onClick={fetchData} className="scoreboard-refresh"><RefreshCw size={15} aria-hidden="true" />{t.tournament.refresh}</button>
+        </div>
       </div>
       <section className="scoreboard-shell" aria-labelledby="match-scoreboard-title">
         <div className="scoreboard-shell__lights" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /></div>

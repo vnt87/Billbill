@@ -12,6 +12,7 @@ interface BracketBoardProps {
   onUpdateNote?: (matchId: string, note: string | null) => void;
   onOverrideBestOf?: (matchId: string, bestOf: number) => void;
   matchHref?: (match: Match) => string;
+  publicMatchHref?: (match: Match) => string;
 }
 
 export function BracketBoard({
@@ -23,6 +24,7 @@ export function BracketBoard({
   onUpdateNote,
   onOverrideBestOf,
   matchHref,
+  publicMatchHref,
 }: BracketBoardProps) {
   const { t } = useLanguage();
   const isRoundRobin = matches.some((m) => m.side === 'round_robin');
@@ -110,6 +112,7 @@ export function BracketBoard({
                       onUpdateNote={onUpdateNote}
                       onOverrideBestOf={onOverrideBestOf}
                       detailHref={matchHref?.(match)}
+                      shareHref={publicMatchHref?.(match)}
                       matchNumber={matchNumberMap.get(match.id)}
                       showMatchNumberOnLeft={match.round === 1}
                     />
@@ -184,6 +187,7 @@ export function BracketBoard({
                       onUpdateNote={onUpdateNote}
                       onOverrideBestOf={onOverrideBestOf}
                       detailHref={matchHref?.(match)}
+                      shareHref={publicMatchHref?.(match)}
                       matchNumber={matchNumberMap.get(match.id)}
                       showMatchNumberOnLeft={true}
                     />

@@ -1,6 +1,6 @@
 import { D1Database } from '@cloudflare/workers-types';
-import { getPublicTournamentService } from '../../_shared/tournaments/service';
-import { jsonSuccess, jsonError } from '../../_shared/tournaments/responses';
+import { getPublicTournamentService } from '../../../_shared/tournaments/service';
+import { jsonSuccess, jsonError } from '../../../_shared/tournaments/responses';
 
 interface Env {
   TOURNAMENT_DB: D1Database;

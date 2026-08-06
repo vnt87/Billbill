@@ -24,9 +24,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   let payload: CreateTournamentInput;
   try {
-    payload = await context.request.json();
-  } catch (error) {
-    return jsonError('INVALID_INPUT', 'Malformed request payload', 400);
+    const rawText = await context.request.text();
+    if (!rawText || !rawText.trim()) {
+      return jsonError('INVALID_INPUT', 'Request body is empty', 400);
+    }
+    payload = JSON.parse(rawText);
+  } catch (error: any) {
+    return jsonError('INVALID_INPUT', `Malformed request payload: ${error?.message || 'Invalid JSON'}`, 400);
   }
 
   try {

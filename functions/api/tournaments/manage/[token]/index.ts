@@ -36,7 +36,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
   if (context.request.method === 'PATCH') {
     try {
-      const req: UpdateTournamentRequest = await context.request.json();
+      const rawText = await context.request.text();
+      if (!rawText || !rawText.trim()) {
+        return jsonError('INVALID_INPUT', 'Request body is empty', 400);
+      }
+      const req: UpdateTournamentRequest = JSON.parse(rawText);
       const result = await updateTournamentService(context.env.TOURNAMENT_DB, token, req);
 
       if ('error' in result) {
@@ -48,8 +52,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       }
 
       return jsonSuccess(result.data, result.version, 200);
-    } catch (error) {
-      return jsonError('INVALID_INPUT', 'Malformed request payload', 400);
+    } catch (error: any) {
+      return jsonError('INVALID_INPUT', `Malformed request payload: ${error?.message || 'Invalid JSON'}`, 400);
     }
   }
 

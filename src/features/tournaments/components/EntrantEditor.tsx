@@ -83,14 +83,14 @@ export function EntrantEditor({ entrants, entrantType, onChange }: EntrantEditor
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200 text-sm sm:text-base">
+        <div className="flex min-w-0 items-center gap-2 font-semibold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
           {entrantType === 'individual' ? <User size={18} /> : <Users size={18} />}
-          <span>{t.tournament.entrantsLabel} ({entrants.length}/{BOUNDS.MAX_ENTRANTS})</span>
+          <span className="truncate">{t.tournament.entrantsLabel} ({entrants.length}/{BOUNDS.MAX_ENTRANTS})</span>
         </div>
         <button
           type="button"
           onClick={handleRandomize}
-          className="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center gap-1.5 transition-colors active:scale-95"
+          className="shrink-0 whitespace-nowrap px-2.5 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-medium flex items-center gap-1.5 transition-colors active:scale-95"
         >
           <Shuffle size={14} />
           <span>{t.tournament.randomizeSeeds}</span>

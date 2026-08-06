@@ -167,7 +167,7 @@ describe('Full End-to-End Tournament User Journey Simulation', () => {
     fireEvent.change(screen.getByPlaceholderText(/At least 8 characters|Ít nhất 8 ký tự/i), { target: { value: 'secret_passphrase' } });
 
     // Verify seed randomization button exists and works
-    const randomizeBtn = screen.getByRole('button', { name: /Randomize Seeds|Ngẫu Nhiên Hạt Giống/i });
+    const randomizeBtn = screen.getByRole('button', { name: /Randomize|Bốc Thăm/i });
     fireEvent.click(randomizeBtn);
 
     // Submit form

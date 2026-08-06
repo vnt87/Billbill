@@ -21,7 +21,7 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedMode = localStorage.getItem('darkMode');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? false;
       const isDark = savedMode ? savedMode === 'true' : prefersDark;
       if (isDark) {
         document.documentElement.classList.add('dark');

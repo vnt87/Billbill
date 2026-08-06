@@ -193,7 +193,7 @@ describe('Full End-to-End Tournament User Journey Simulation', () => {
     fireEvent.change(spinButtons[0], { target: { value: '2' } });
     fireEvent.change(spinButtons[1], { target: { value: '0' } });
 
-    const saveScoreBtn = screen.getByRole('button', { name: 'Save' });
+    const saveScoreBtn = screen.getByRole('button', { name: 'Save Score' });
     fireEvent.click(saveScoreBtn);
 
     await waitFor(() => {

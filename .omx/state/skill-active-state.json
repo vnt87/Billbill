@@ -3,11 +3,9 @@
   "active": true,
   "skill": "plan",
   "keyword": "$plan",
-  "phase": "planning",
+  "phase": "reviewing",
   "activated_at": "2026-08-05T11:01:19.803Z",
-  "updated_at": "2026-08-06T10:19:05.476Z",
+  "updated_at": "2026-08-06T10:39:56.674Z",
   "source": "keyword-detector",
-  "session_id": "",
-  "thread_id": "019fd695-5953-7073-8d95-87b028f3266f",
-  "turn_id": "019fd695-599f-7753-acd4-a2d5a0f3b639"
+  "input_lock": null
 }

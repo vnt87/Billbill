@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Match, Entrant } from '../../../../shared/tournaments/types';
 import { BOUNDS } from '../../../../shared/tournaments/contracts';
 import { useLanguage } from '../../../contexts/LanguageContext';
@@ -41,11 +41,14 @@ export function MatchCard({
   const entrantB = match.entrantBId ? entrantMap.get(match.entrantBId) || null : null;
 
   const [isEditing, setIsEditing] = useState(false);
-  const [scoreA, setScoreA] = useState<number | ''>(match.scoreA !== null ? match.scoreA : '');
-  const [scoreB, setScoreB] = useState<number | ''>(match.scoreB !== null ? match.scoreB : '');
+  const [scoreA, setScoreA] = useState<number | ''>(match.scoreA ?? 0);
+  const [scoreB, setScoreB] = useState<number | ''>(match.scoreB ?? 0);
   const [note, setNote] = useState<string>(match.privateNote || '');
   const [showNoteEditor, setShowNoteEditor] = useState(false);
   const [copiedMatchLink, setCopiedMatchLink] = useState(false);
+  const focusedScore = useRef<'A' | 'B'>('A');
+  const scoreAInputRef = useRef<HTMLInputElement>(null);
+  const scoreBInputRef = useRef<HTMLInputElement>(null);
 
   const targetShareUrl = shareHref;
 
@@ -81,12 +84,22 @@ export function MatchCard({
   };
 
   const winsNeeded = Math.floor(match.bestOf / 2) + 1;
+  const scoreChanged =
+    scoreA !== (match.scoreA ?? 0) ||
+    scoreB !== (match.scoreB ?? 0);
 
   useEffect(() => {
-    setScoreA(match.scoreA !== null ? match.scoreA : '');
-    setScoreB(match.scoreB !== null ? match.scoreB : '');
+    setScoreA(match.scoreA ?? 0);
+    setScoreB(match.scoreB ?? 0);
     setNote(match.privateNote || '');
   }, [match.scoreA, match.scoreB, match.privateNote, isEditing]);
+
+  useEffect(() => {
+    if (!isEditing) return;
+    const input = focusedScore.current === 'A' ? scoreAInputRef.current : scoreBInputRef.current;
+    input?.focus();
+    input?.select();
+  }, [isEditing]);
 
   const getEntrantName = (entrant: Entrant | null, isA: boolean) => {
     if (entrant) return entrant.name;
@@ -99,7 +112,7 @@ export function MatchCard({
   };
 
   const handleSaveScore = () => {
-    if (scoreA === '' || scoreB === '') return;
+    if (!scoreChanged || scoreA === '' || scoreB === '') return;
     const valA = Number(scoreA);
     const valB = Number(scoreB);
     if (isNaN(valA) || isNaN(valB) || !Number.isInteger(valA) || !Number.isInteger(valB)) return;
@@ -114,8 +127,8 @@ export function MatchCard({
   const handleClear = () => {
     if (onClearResult) {
       onClearResult(match.id);
-      setScoreA('');
-      setScoreB('');
+      setScoreA(0);
+      setScoreB(0);
       setIsEditing(false);
     }
   };
@@ -180,13 +193,30 @@ export function MatchCard({
             )}
           </div>
           <div
+            onClick={() => {
+              if (readOnly || match.state === 'blocked' || match.state === 'bye') return;
+              focusedScore.current = 'A';
+              setIsEditing(true);
+            }}
             className={`w-9 py-1.5 text-center font-mono font-bold text-xs shrink-0 ${
               match.winnerId && match.winnerId === match.entrantAId
                 ? 'bg-amber-500 text-white font-black'
                 : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-            }`}
+            } ${!readOnly && match.state !== 'blocked' && match.state !== 'bye' ? 'cursor-pointer' : ''}`}
           >
-            {match.scoreA !== null ? match.scoreA : '-'}
+            {!readOnly && isEditing ? (
+              <input
+                ref={scoreAInputRef}
+                type="number"
+                min={0}
+                max={winsNeeded}
+                value={scoreA}
+                onChange={(e) => setScoreA(e.target.value === '' ? '' : Number(e.target.value))}
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`${getEntrantName(entrantA, true)} score`}
+                className="w-full bg-transparent text-center font-inherit outline-none"
+              />
+            ) : (match.scoreA ?? 0)}
           </div>
         </div>
 
@@ -208,13 +238,30 @@ export function MatchCard({
             )}
           </div>
           <div
+            onClick={() => {
+              if (readOnly || match.state === 'blocked' || match.state === 'bye') return;
+              focusedScore.current = 'B';
+              setIsEditing(true);
+            }}
             className={`w-9 py-1.5 text-center font-mono font-bold text-xs shrink-0 ${
               match.winnerId && match.winnerId === match.entrantBId
                 ? 'bg-amber-500 text-white font-black'
                 : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-            }`}
+            } ${!readOnly && match.state !== 'blocked' && match.state !== 'bye' ? 'cursor-pointer' : ''}`}
           >
-            {match.scoreB !== null ? match.scoreB : '-'}
+            {!readOnly && isEditing ? (
+              <input
+                ref={scoreBInputRef}
+                type="number"
+                min={0}
+                max={winsNeeded}
+                value={scoreB}
+                onChange={(e) => setScoreB(e.target.value === '' ? '' : Number(e.target.value))}
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`${getEntrantName(entrantB, false)} score`}
+                className="w-full bg-transparent text-center font-inherit outline-none"
+              />
+            ) : (match.scoreB ?? 0)}
           </div>
         </div>
       </div>
@@ -267,35 +314,17 @@ export function MatchCard({
           ) : (
             <div className="space-y-2 bg-slate-50 dark:bg-slate-800/80 p-2 border border-blue-200 dark:border-blue-900">
               <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                Enter Score (First to {winsNeeded}):
+                Edit Score (First to {winsNeeded}):
               </div>
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={0}
-                  max={winsNeeded}
-                  value={scoreA}
-                  onChange={(e) => setScoreA(e.target.value === '' ? '' : Number(e.target.value))}
-                  placeholder="0"
-                  className="w-14 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-center font-mono font-bold focus:outline-none"
-                />
-                <span className="text-slate-400 font-bold">:</span>
-                <input
-                  type="number"
-                  min={0}
-                  max={winsNeeded}
-                  value={scoreB}
-                  onChange={(e) => setScoreB(e.target.value === '' ? '' : Number(e.target.value))}
-                  placeholder="0"
-                  className="w-14 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-center font-mono font-bold focus:outline-none"
-                />
                 <button
                   type="button"
+                  disabled={!scoreChanged}
                   onClick={handleSaveScore}
-                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium flex items-center gap-1 transition-colors"
+                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-emerald-600 text-white text-xs font-medium flex items-center gap-1 transition-colors"
                 >
                   <Check size={12} />
-                  <span>Save</span>
+                  <span>{t.tournament.saveResult}</span>
                 </button>
               </div>
 

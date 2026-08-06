@@ -14,7 +14,7 @@ const credentialKey = (publicId: string) => `chiabill:tournament-management:${pu
 function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   const { t } = useLanguage();
   return (
-    <div data-testid="modal-backdrop" className="fixed left-0 top-0 z-[100] flex h-[100dvh] min-h-screen w-screen items-center justify-center overflow-y-auto bg-slate-950/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={title}>
+    <div data-testid="modal-backdrop" className="fixed left-0 top-0 z-[100] flex h-[100dvh] w-screen items-center justify-center overflow-y-auto bg-slate-950/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={title}>
       <div className="my-auto max-h-[calc(100dvh-2rem)] w-full max-w-5xl overflow-y-auto border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
           <h2 className="text-lg font-bold tracking-tight text-slate-950 dark:text-white">{title}</h2>

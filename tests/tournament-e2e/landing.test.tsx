@@ -73,6 +73,7 @@ describe('Tournament Creation & Navigation — Phase 6 & 7', () => {
 
     const backdrop = screen.getByTestId('modal-backdrop');
     expect(backdrop).toHaveClass('fixed', 'top-0', 'h-[100dvh]', 'w-screen');
+    expect(backdrop).not.toHaveClass('min-h-screen');
     expect(screen.getByTestId('create-tournament-layout')).toHaveClass('lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]');
     expect(screen.getAllByText('*').every((element) => element.classList.contains('text-red-600'))).toBe(true);
     expect(screen.getByLabelText(/Management Passphrase/i)).toBeRequired();

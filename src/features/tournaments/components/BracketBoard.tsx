@@ -53,6 +53,22 @@ export function BracketBoard({
 
     const maxRound = Math.max(...sideMatches.map((m) => m.round));
     const roundArray = Array.from({ length: maxRound }, (_, i) => i + 1);
+    const firstRoundMatchCount = sideMatches.filter((m) => m.round === 1).length;
+    const baseColumnWidth = 300;
+    const connectorColumnWidth = 40;
+    const gridColumns = Array.from({ length: maxRound }, () => `${baseColumnWidth}px`).join(` ${connectorColumnWidth}px `);
+    const gridRows = `repeat(${Math.max(firstRoundMatchCount, 1)}, minmax(180px, auto))`;
+
+    const getGridPlacement = (match: Match) => {
+      const startRow = (match.position - 1) * 2 ** (match.round - 1) + 1;
+      const rowSpan = 2 ** (match.round - 1);
+      const column = (match.round - 1) * 2 + 1;
+
+      return {
+        gridColumn: column,
+        gridRow: `${startRow} / span ${rowSpan}`,
+      };
+    };
 
     return (
       <div className="space-y-3">
@@ -60,72 +76,78 @@ export function BracketBoard({
           <span>{title}</span>
         </div>
         <div className="overflow-x-auto pb-4 pt-2">
-          <div className="flex items-stretch gap-0 min-w-max">
-            {roundArray.map((round) => {
-              const roundMatches = sideMatches
-                .filter((m) => m.round === round)
-                .sort((a, b) => a.position - b.position);
+          <div className="min-w-max">
+            {/* Keeping headers in the same column grid as the cards makes the board read as one system. */}
+            <div className="grid mb-3" style={{ gridTemplateColumns: gridColumns }}>
+              {roundArray.map((round) => {
+                let roundName = (t.tournament.roundLabel || 'Round {round}').replace('{round}', round.toString());
+                if (round === maxRound && side === 'winners') roundName = t.tournament.winnersFinal || 'Winners Final';
+                if (round === maxRound && side === 'losers') roundName = t.tournament.losersFinal || 'Losers Final';
 
-              const nextRoundMatches = round < maxRound
-                ? sideMatches.filter((m) => m.round === round + 1).sort((a, b) => a.position - b.position)
-                : [];
-
-              let roundName = (t.tournament.roundLabel || 'Round {round}').replace('{round}', round.toString());
-              if (round === maxRound && side === 'winners') roundName = t.tournament.winnersFinal || 'Winners Final';
-              if (round === maxRound && side === 'losers') roundName = t.tournament.losersFinal || 'Losers Final';
-
-              const isFirstRound = round === 1;
-              const isPairing = nextRoundMatches.length > 0 && roundMatches.length === nextRoundMatches.length * 2;
-              const isSingle = nextRoundMatches.length > 0 && roundMatches.length === nextRoundMatches.length;
-
-              return (
-                <div key={round} className="flex items-stretch">
-                  {/* Round Column */}
-                  <div className="flex flex-col flex-shrink-0 w-[260px] sm:w-[300px]">
-                    <div className="bg-slate-200 dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-center mb-3">
-                      {roundName}
-                    </div>
-                    <div className="flex-1 flex flex-col justify-around space-y-4">
-                      {roundMatches.map((match) => (
-                        <div key={match.id} className="flex items-center justify-center my-auto">
-                          <MatchCard
-                            match={match}
-                            entrants={entrants}
-                            readOnly={readOnly}
-                            onCompleteResult={onCompleteResult}
-                            onClearResult={onClearResult}
-                            onUpdateNote={onUpdateNote}
-                            onOverrideBestOf={onOverrideBestOf}
-                            detailHref={matchHref?.(match)}
-                            matchNumber={matchNumberMap.get(match.id)}
-                            showMatchNumberOnLeft={isFirstRound}
-                          />
-                        </div>
-                      ))}
-                    </div>
+                return (
+                  <div
+                    key={round}
+                    className="bg-slate-200 dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-center"
+                    style={{ gridColumn: (round - 1) * 2 + 1 }}
+                  >
+                    {roundName}
                   </div>
+                );
+              })}
+            </div>
 
-                  {/* Connector Column to Next Round */}
-                  {round < maxRound && (
-                    <div className="flex flex-col flex-shrink-0 w-8 sm:w-10 pt-8">
-                      <div className="flex-1 flex flex-col justify-around">
-                        {nextRoundMatches.map((nextMatch, idx) => {
-                          const connectorType = isPairing ? 'pair' : isSingle ? 'single' : 'pair';
-                          return (
-                            <BracketConnector
-                              key={`conn-${nextMatch.id}-${idx}`}
-                              matchNumber={matchNumberMap.get(nextMatch.id)}
-                              type={connectorType}
-                              className="h-full"
-                            />
-                          );
-                        })}
-                      </div>
+            <div className="grid items-stretch" style={{ gridTemplateColumns: gridColumns, gridTemplateRows: gridRows }}>
+              {sideMatches.map((match) => {
+                const placement = getGridPlacement(match);
+                return (
+                  <div key={match.id} className="flex items-center justify-center min-w-0" style={placement}>
+                    <MatchCard
+                      match={match}
+                      entrants={entrants}
+                      readOnly={readOnly}
+                      onCompleteResult={onCompleteResult}
+                      onClearResult={onClearResult}
+                      onUpdateNote={onUpdateNote}
+                      onOverrideBestOf={onOverrideBestOf}
+                      detailHref={matchHref?.(match)}
+                      matchNumber={matchNumberMap.get(match.id)}
+                      showMatchNumberOnLeft={match.round === 1}
+                    />
+                  </div>
+                );
+              })}
+
+              {roundArray.slice(0, -1).flatMap((round) => {
+                const roundMatches = sideMatches.filter((m) => m.round === round);
+                const nextRoundMatches = sideMatches
+                  .filter((m) => m.round === round + 1)
+                  .sort((a, b) => a.position - b.position);
+                const isPairing = roundMatches.length === nextRoundMatches.length * 2;
+                const isSingle = roundMatches.length === nextRoundMatches.length;
+
+                return nextRoundMatches.map((nextMatch) => {
+                  const startRow = (nextMatch.position - 1) * (isPairing ? 2 ** round : 1) + 1;
+                  const rowSpan = isPairing ? 2 ** round : 1;
+
+                  return (
+                    <div
+                      key={`conn-${nextMatch.id}`}
+                      className="flex items-stretch justify-center"
+                      style={{
+                        gridColumn: round * 2,
+                        gridRow: `${startRow} / span ${rowSpan}`,
+                      }}
+                    >
+                      <BracketConnector
+                        matchNumber={matchNumberMap.get(nextMatch.id)}
+                        type={isSingle ? 'single' : 'pair'}
+                        className="h-full"
+                      />
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                  );
+                });
+              })}
+            </div>
           </div>
         </div>
       </div>

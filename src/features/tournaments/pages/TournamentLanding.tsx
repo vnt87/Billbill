@@ -14,8 +14,8 @@ const credentialKey = (publicId: string) => `chiabill:tournament-management:${pu
 function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   const { t } = useLanguage();
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={title}>
-      <div className="max-h-[90dvh] w-full max-w-3xl overflow-y-auto border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+    <div data-testid="modal-backdrop" className="fixed left-0 top-0 z-[100] flex h-[100dvh] min-h-screen w-screen items-center justify-center overflow-y-auto bg-slate-950/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="my-auto max-h-[calc(100dvh-2rem)] w-full max-w-5xl overflow-y-auto border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
           <h2 className="text-lg font-bold tracking-tight text-slate-950 dark:text-white">{title}</h2>
           <button type="button" onClick={onClose} className="rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white" aria-label={t.tournament.close || 'Close'}>
@@ -126,9 +126,27 @@ function AccessModal({ tournament, onClose, onSubmit }: { tournament: Tournament
 
 function CreateTournamentModal({ onClose, onCreated }: { onClose: () => void; onCreated: (result: { adminUrl: string; publicUrl: string }) => void }) {
   const { t } = useLanguage();
-  const [name, setName] = useState(''); const [format, setFormat] = useState<TournamentFormat>('single_elimination'); const [entrantType, setEntrantType] = useState<EntrantType>('individual'); const [defaultBestOf, setDefaultBestOf] = useState(3); const [managementPassphrase, setManagementPassphrase] = useState(''); const [submitting, setSubmitting] = useState(false); const [error, setError] = useState('');
-  const [entrants, setEntrants] = useState<CreateEntrantInput[]>(() => getRandomDefaultPlayerNames(4).map((n, idx) => ({ name: n, seed: idx + 1, roster: [] })));
-  const handleEntrantTypeChange = (type: EntrantType) => { setEntrantType(type); setEntrants(entrants.map((e, idx) => ({ ...e, name: type === 'individual' ? getRandomDefaultPlayerNames(entrants.length)[idx] : `Team ${idx + 1}`, roster: type === 'individual' ? [] : ['Member 1'] }))); };
+  const [name, setName] = useState('');
+  const [format, setFormat] = useState<TournamentFormat>('single_elimination');
+  const [entrantType, setEntrantType] = useState<EntrantType>('individual');
+  const [defaultBestOf, setDefaultBestOf] = useState(3);
+  const [managementPassphrase, setManagementPassphrase] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [entrants, setEntrants] = useState<CreateEntrantInput[]>(() =>
+    getRandomDefaultPlayerNames(4).map((n, idx) => ({ name: n, seed: idx + 1, roster: [] }))
+  );
+
+  const handleEntrantTypeChange = (type: EntrantType) => {
+    setEntrantType(type);
+    const randomNames = getRandomDefaultPlayerNames(entrants.length);
+    setEntrants(entrants.map((entrant, idx) => ({
+      ...entrant,
+      name: type === 'individual' ? randomNames[idx] : `Team ${idx + 1}`,
+      roster: type === 'individual' ? [] : ['Member 1'],
+    })));
+  };
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
@@ -142,7 +160,57 @@ function CreateTournamentModal({ onClose, onCreated }: { onClose: () => void; on
     if ('error' in res) setError(res.error.message);
     else onCreated({ adminUrl: res.data.adminUrl, publicUrl: res.data.publicUrl });
   };
-  return <Modal title={t.tournament.createModalTitle} onClose={onClose}><form onSubmit={submit} className="space-y-6">{error && <div className="flex items-center gap-2 border border-red-200 bg-red-50 p-3 text-sm text-red-700"><AlertCircle size={18} />{error}</div>}<div className="space-y-2"><label htmlFor="tournament-name" className="text-sm font-semibold">{t.tournament.nameLabel} *</label><input id="tournament-name" required value={name} onChange={(e) => setName(e.target.value)} maxLength={BOUNDS.MAX_TOURNAMENT_NAME_LENGTH} placeholder={t.tournament.namePlaceholder} className="w-full border border-slate-300 bg-slate-50 px-3 py-3 text-sm outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800" /></div><div className="space-y-2"><label className="text-sm font-semibold">{t.tournament.formatLabel}</label><div className="grid gap-2 sm:grid-cols-3">{([{ id: 'single_elimination', label: t.tournament.formatSingleElimination }, { id: 'double_elimination', label: t.tournament.formatDoubleElimination }, { id: 'round_robin', label: t.tournament.formatRoundRobin }] as const).map((item) => <button key={item.id} type="button" onClick={() => setFormat(item.id)} className={`border p-3 text-left text-xs font-semibold ${format === item.id ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800'}`}>{item.label}</button>)}</div></div><div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><label className="text-sm font-semibold">{t.tournament.entrantTypeLabel}</label><div className="grid grid-cols-2 gap-2">{(['individual', 'team'] as const).map((type) => <button key={type} type="button" onClick={() => handleEntrantTypeChange(type)} className={`border py-3 text-xs font-semibold ${entrantType === type ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800'}`}>{type === 'individual' ? t.tournament.entrantIndividual : t.tournament.entrantTeam}</button>)}</div></div><div className="space-y-2"><label htmlFor="default-best-of" className="text-sm font-semibold">{t.tournament.defaultBestOfLabel}</label><select id="default-best-of" value={defaultBestOf} onChange={(e) => setDefaultBestOf(Number(e.target.value))} className="w-full border border-slate-300 bg-slate-50 px-3 py-3 text-sm dark:border-slate-700 dark:bg-slate-800">{BOUNDS.ALLOWED_BEST_OF.map((b) => <option key={b} value={b}>{(t.tournament.bestOfOption || 'Best of {count}').replace('{count}', b.toString())}</option>)}</select></div></div><div className="space-y-2"><label htmlFor="management-passphrase" className="flex items-center gap-2 text-sm font-semibold"><KeyRound size={16} />{t.tournament.managementPassphraseLabel} *</label><input id="management-passphrase" required minLength={BOUNDS.MIN_MANAGEMENT_PASSPHRASE_LENGTH} type="password" value={managementPassphrase} onChange={(e) => setManagementPassphrase(e.target.value)} placeholder={t.tournament.managementPassphrasePlaceholder} className="w-full border border-slate-300 bg-slate-50 px-3 py-3 text-sm outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800" /><p className="text-xs text-slate-500">{t.tournament.managementPassphraseHint}</p></div><div className="border-t border-slate-200 pt-5 dark:border-slate-800"><EntrantEditor entrants={entrants} entrantType={entrantType} onChange={setEntrants} /></div><button disabled={submitting} className="flex w-full items-center justify-center gap-2 bg-blue-700 py-3 text-sm font-bold text-white disabled:opacity-50">{submitting && <Loader2 size={18} className="animate-spin" />}{submitting ? t.tournament.creating : t.tournament.createButton}</button><p className="text-center text-xs text-slate-500">{t.tournament.createModalHint}</p></form></Modal>;
+
+  return (
+    <Modal title={t.tournament.createModalTitle} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-6">
+        {error && <div className="flex items-center gap-2 border border-red-200 bg-red-50 p-3 text-sm text-red-700"><AlertCircle size={18} />{error}</div>}
+        <div data-testid="create-tournament-layout" className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label htmlFor="tournament-name" className="text-sm font-semibold">{t.tournament.nameLabel} <span className="text-red-600" aria-hidden="true">*</span></label>
+              <input id="tournament-name" required value={name} onChange={(e) => setName(e.target.value)} maxLength={BOUNDS.MAX_TOURNAMENT_NAME_LENGTH} placeholder={t.tournament.namePlaceholder} className="w-full border border-slate-300 bg-slate-50 px-3 py-3 text-sm outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800" />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">{t.tournament.formatLabel}</label>
+              <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                {([{ id: 'single_elimination', label: t.tournament.formatSingleElimination }, { id: 'double_elimination', label: t.tournament.formatDoubleElimination }, { id: 'round_robin', label: t.tournament.formatRoundRobin }] as const).map((item) => (
+                  <button key={item.id} type="button" onClick={() => setFormat(item.id)} className={`border p-3 text-left text-xs font-semibold ${format === item.id ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800'}`}>{item.label}</button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">{t.tournament.entrantTypeLabel}</label>
+                <div className="grid grid-cols-2 gap-2">{(['individual', 'team'] as const).map((type) => <button key={type} type="button" onClick={() => handleEntrantTypeChange(type)} className={`border py-3 text-xs font-semibold ${entrantType === type ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800'}`}>{type === 'individual' ? t.tournament.entrantIndividual : t.tournament.entrantTeam}</button>)}</div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="default-best-of" className="text-sm font-semibold">{t.tournament.defaultBestOfLabel}</label>
+                <select id="default-best-of" value={defaultBestOf} onChange={(e) => setDefaultBestOf(Number(e.target.value))} className="w-full border border-slate-300 bg-slate-50 px-3 py-3 text-sm dark:border-slate-700 dark:bg-slate-800">{BOUNDS.ALLOWED_BEST_OF.map((b) => <option key={b} value={b}>{(t.tournament.bestOfOption || 'Best of {count}').replace('{count}', b.toString())}</option>)}</select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="management-passphrase" className="flex items-center gap-2 text-sm font-semibold"><KeyRound size={16} />{t.tournament.managementPassphraseLabel} <span className="text-red-600" aria-hidden="true">*</span></label>
+              <input id="management-passphrase" required minLength={BOUNDS.MIN_MANAGEMENT_PASSPHRASE_LENGTH} type="password" value={managementPassphrase} onChange={(e) => setManagementPassphrase(e.target.value)} placeholder={t.tournament.managementPassphrasePlaceholder} className="w-full border border-slate-300 bg-slate-50 px-3 py-3 text-sm outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800" />
+              <p className="text-xs text-slate-500">{t.tournament.managementPassphraseHint}</p>
+            </div>
+          </div>
+
+          <div className="min-w-0 border-t border-slate-200 pt-5 dark:border-slate-800 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+            <EntrantEditor entrants={entrants} entrantType={entrantType} onChange={setEntrants} />
+          </div>
+        </div>
+
+        <div className="space-y-3 border-t border-slate-200 pt-5 dark:border-slate-800">
+          <button disabled={submitting} className="flex w-full items-center justify-center gap-2 bg-blue-700 py-3 text-sm font-bold text-white disabled:opacity-50">{submitting && <Loader2 size={18} className="animate-spin" />}{submitting ? t.tournament.creating : t.tournament.createButton}</button>
+          <p className="text-center text-xs text-slate-500">{t.tournament.createModalHint}</p>
+        </div>
+      </form>
+    </Modal>
+  );
 }
 
 export default TournamentLanding;

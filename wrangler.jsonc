@@ -4,6 +4,12 @@
   "pages_build_output_dir": "./dist",
   "compatibility_date": "2026-08-06",
   "compatibility_flags": ["nodejs_compat"],
+  "kv_namespaces": [
+    {
+      "binding": "BILLS",
+      "id": "9f97de08b0344e0f8caaabf7e8112e97"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "TOURNAMENT_DB",

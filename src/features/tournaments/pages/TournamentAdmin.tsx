@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { getAdminTournament, updateTournament, updateMatch } from '../api/client';
+import { getAdminTournament, updateTournament, updateMatch, deleteTournament } from '../api/client';
 import { AdminTournamentDto, CreateEntrantInput, MatchCommand } from '../../../../shared/tournaments/contracts';
 import { BracketBoard } from '../components/BracketBoard';
 import { StandingsTable } from '../components/StandingsTable';
@@ -16,10 +16,16 @@ import {
   Share2,
   Users,
   LayoutGrid,
+  MoreVertical,
+  KeyRound,
+  Trash2,
+  Loader2,
+  X,
 } from 'lucide-react';
 
 export function TournamentAdmin() {
   const { adminToken } = useParams<{ adminToken: string }>();
+  const navigate = useNavigate();
   const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
@@ -28,6 +34,10 @@ export function TournamentAdmin() {
   const [version, setVersion] = useState<number>(1);
   const [showShareLinks, setShowShareLinks] = useState(false);
   const [activeTab, setActiveTab] = useState<'bracket' | 'standings' | 'entrants'>('bracket');
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   // Pending confirmation state for invalidation
   const [pendingInvalidation, setPendingInvalidation] = useState<{
@@ -164,6 +174,23 @@ export function TournamentAdmin() {
   const { tournament, entrants, matches } = aggregate;
   const isRoundRobin = tournament.format === 'round_robin';
 
+  const handleConfirmDelete = async () => {
+    if (!adminToken) return;
+    setBusy(true);
+    const res = await deleteTournament(adminToken, version);
+    setBusy(false);
+    if ('error' in res) {
+      setErrorMsg(res.error.message);
+      setShowDeleteConfirm(false);
+    } else {
+      if (publicUrl) {
+        const publicId = publicUrl.split('/').pop();
+        if (publicId) localStorage.removeItem(`chiabill:tournament-management:${publicId}`);
+      }
+      navigate('/tournaments');
+    }
+  };
+
   return (
     <main className="space-y-6 py-6">
       {errorMsg && (
@@ -198,24 +225,57 @@ export function TournamentAdmin() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-start sm:self-auto relative">
             <button
               type="button"
               onClick={() => setShowShareLinks(!showShareLinks)}
-              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors active:scale-95"
+              className="p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium flex items-center justify-center transition-colors active:scale-95"
+              title={t.tournament.shareLinks || 'Share Links'}
+              aria-label={t.tournament.shareLinks || 'Share Links'}
             >
               <Share2 size={16} />
-              <span>{t.tournament.shareLinks || 'Share Links'}</span>
             </button>
             <button
               type="button"
               onClick={fetchAdminData}
-              className="px-3 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors active:scale-95"
+              className="p-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium flex items-center justify-center transition-colors active:scale-95"
               title={t.tournament.refresh}
+              aria-label={t.tournament.refresh}
             >
               <RefreshCw size={16} />
-              <span className="hidden sm:inline">{t.tournament.refresh}</span>
             </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="p-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium flex items-center justify-center transition-colors active:scale-95"
+                title="Options"
+                aria-label="Options"
+              >
+                <MoreVertical size={16} />
+              </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 top-full mt-1 z-30 w-44 border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900 py-1">
+                  <button
+                    type="button"
+                    onClick={() => { setMenuOpen(false); navigate(publicUrl); }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <KeyRound size={14} />
+                    <span>{t.tournament.viewTournament}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setMenuOpen(false); setShowDeleteConfirm(true); }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/50"
+                  >
+                    <Trash2 size={14} />
+                    <span>{t.tournament.deleteTournamentButton || 'Delete'}</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -225,6 +285,43 @@ export function TournamentAdmin() {
           </div>
         )}
       </SpotlightCard>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed left-0 top-0 z-[100] flex h-[100dvh] w-screen items-center justify-center overflow-y-auto bg-slate-950/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="admin-delete-tournament-heading">
+          <div className="my-auto w-full max-w-md border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+              <h2 id="admin-delete-tournament-heading" className="text-lg font-bold text-red-600 dark:text-red-400">{t.tournament.deleteTournamentTitle || 'Delete Tournament'}</h2>
+              <button type="button" onClick={() => setShowDeleteConfirm(false)} aria-label={t.tournament.close || 'Close'} className="rounded-full p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="py-4 space-y-3">
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                {t.tournament.deleteTournamentConfirm || 'Are you sure you want to delete this tournament? This action cannot be undone.'}
+              </p>
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+              >
+                {t.tournament.close || 'Cancel'}
+              </button>
+              <button
+                disabled={busy}
+                type="button"
+                onClick={handleConfirmDelete}
+                className="flex items-center gap-2 bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {busy && <Loader2 size={14} className="animate-spin" />}
+                {busy ? (t.tournament.deleting || 'Deleting...') : (t.tournament.deleteTournamentButton || 'Delete Tournament')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tabs Bar */}
       <div className="flex border-b border-slate-200 dark:border-slate-800">

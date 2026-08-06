@@ -22,6 +22,7 @@ import {
   listTournamentRecords,
   setTournamentAccess,
   updateTournamentAggregate,
+  deleteTournamentRecord,
   CorruptedStateError,
 } from './repository';
 import { generateSingleEliminationMatches } from '../../../shared/tournaments/generateSingleElimination';
@@ -370,4 +371,34 @@ export async function updateMatchService(
   }
 
   return getAdminTournamentService(db, adminToken);
+}
+
+export async function deleteTournamentService(
+  db: D1Database,
+  managementToken: string,
+  expectedVersion: number
+): Promise<{ data: { success: boolean }; version: number } | ApiError> {
+  if (!Number.isInteger(expectedVersion)) {
+    return { error: { code: 'INVALID_INPUT', message: 'A valid expected version is required.' } };
+  }
+
+  const adminHash = await hashAdminToken(managementToken);
+  let record = await getTournamentByManagementHash(db, adminHash);
+  if (!record) {
+    record = await getTournamentByAdminHash(db, adminHash);
+  }
+  if (!record) {
+    return { error: { code: 'TOURNAMENT_NOT_FOUND', message: 'Tournament not found' } };
+  }
+
+  if (record.record.version !== expectedVersion) {
+    return { error: { code: 'STALE_VERSION', message: 'Tournament was updated by another session. Please refresh.' } };
+  }
+
+  const deleted = await deleteTournamentRecord(db, record.record.id, expectedVersion);
+  if (!deleted) {
+    return { error: { code: 'DELETE_FAILED', message: 'Tournament could not be deleted.' } };
+  }
+
+  return { data: { success: true }, version: record.record.version };
 }

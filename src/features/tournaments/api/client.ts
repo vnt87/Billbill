@@ -131,3 +131,13 @@ export async function updateMatch(
     body: JSON.stringify(payload),
   });
 }
+
+export async function deleteTournament(
+  managementToken: string,
+  expectedVersion: number
+): Promise<ApiResponse<{ success: boolean }>> {
+  return request<{ success: boolean }>(`/api/tournaments/manage/${managementToken}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ expectedVersion }),
+  });
+}

@@ -1,15 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { LanguageProvider } from '../../src/contexts/LanguageContext';
 import TournamentLanding from '../../src/features/tournaments/pages/TournamentLanding';
 
 function TestLanding() {
   return (
     <LanguageProvider>
-      <MemoryRouter>
-        <TournamentLanding />
+      <MemoryRouter initialEntries={['/tournaments']}>
+        <Routes>
+          <Route path="/tournaments" element={<TournamentLanding />} />
+          <Route path="/tournaments/manage/:adminToken" element={<div>Admin Page Mock</div>} />
+        </Routes>
       </MemoryRouter>
     </LanguageProvider>
   );
@@ -62,7 +65,7 @@ describe('Tournament Creation & Navigation — Phase 6 & 7', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getAllByText(/Spectator Link|Link Xem Direct/i).length).toBeGreaterThan(0);
+      expect(screen.getByText(/Admin Page Mock/i)).toBeInTheDocument();
     });
   });
 

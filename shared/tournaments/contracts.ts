@@ -136,6 +136,10 @@ export interface UpdateTournamentRequest {
   confirmInvalidation?: string[];
 }
 
+export interface DeleteTournamentRequest {
+  expectedVersion: number;
+}
+
 export interface MatchMutationRequest {
   expectedVersion: number;
   command: MatchCommand;

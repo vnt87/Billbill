@@ -175,15 +175,10 @@ describe('Full End-to-End Tournament User Journey Simulation', () => {
     const createBtn = createButtons[createButtons.length - 1];
     fireEvent.submit(createBtn.closest('form')!);
 
-    // Step B: Share Links screen appears
+    // Step B: Direct navigation to Admin Dashboard
     await waitFor(() => {
-      expect(screen.getAllByText(/Admin Link|Link Quản Lý/i).length).toBeGreaterThan(0);
-      expect(screen.getByText(/Enter Admin Dashboard/i)).toBeInTheDocument();
+      expect(screen.getByText('Billiard Club Championship 2026')).toBeInTheDocument();
     });
-
-    // Step C: Navigate to Admin Dashboard
-    const enterAdminBtn = screen.getByRole('button', { name: /Enter Admin Dashboard/i });
-    fireEvent.click(enterAdminBtn);
 
     await waitFor(() => {
       expect(screen.getByText('Billiard Club Championship 2026')).toBeInTheDocument();

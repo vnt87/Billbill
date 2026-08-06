@@ -6,9 +6,8 @@ import { useLanguage } from '../../../contexts/LanguageContext';
 import { CreateEntrantInput, BOUNDS, TournamentSummary } from '../../../../shared/tournaments/contracts';
 import { TournamentFormat, EntrantType } from '../../../../shared/tournaments/types';
 import { getRandomDefaultPlayerNames } from '../../../../shared/tournaments/utils';
-import { accessTournament, createTournament, listTournaments } from '../api/client';
+import { createTournament, listTournaments } from '../api/client';
 import { EntrantEditor } from '../components/EntrantEditor';
-import { ShareLinks } from '../components/ShareLinks';
 
 const credentialKey = (publicId: string) => `chiabill:tournament-management:${publicId}`;
 
@@ -36,8 +35,6 @@ export function TournamentLanding() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [accessTarget, setAccessTarget] = useState<TournamentSummary | null>(null);
-  const [createdResult, setCreatedResult] = useState<{ adminUrl: string; publicUrl: string } | null>(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -51,27 +48,6 @@ export function TournamentLanding() {
 
   const ongoing = useMemo(() => tournaments.filter((item) => item.status !== 'completed'), [tournaments]);
   const ended = useMemo(() => tournaments.filter((item) => item.status === 'completed'), [tournaments]);
-
-  const handleAccess = async (passphrase: string): Promise<{ ok: boolean; message?: string }> => {
-    if (!accessTarget) return { ok: false, message: t.tournament.accessDenied };
-    const res = await accessTournament(accessTarget.publicId, passphrase);
-    if ('error' in res) {
-      const isAuthError = res.error.code === 'INVALID_PASSPHRASE' || res.error.code === 'ACCESS_DENIED';
-      return {
-        ok: false,
-        message: isAuthError ? t.tournament.accessDenied : (res.error.message || t.tournament.accessDenied),
-      };
-    }
-    localStorage.setItem(credentialKey(accessTarget.publicId), res.data.managementToken);
-    navigate(res.data.adminUrl);
-    return { ok: true };
-  };
-
-  const handleManage = (item: TournamentSummary) => {
-    const storedToken = localStorage.getItem(credentialKey(item.publicId));
-    if (storedToken) { navigate(`/tournaments/manage/${storedToken}`); return; }
-    setAccessTarget(item);
-  };
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 py-8">
@@ -87,12 +63,10 @@ export function TournamentLanding() {
         </div>
       </section>
 
-      {createdResult && <div className="space-y-4"><div className="border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">{t.tournament.createButton} ✓</div><ShareLinks adminUrl={createdResult.adminUrl} publicUrl={createdResult.publicUrl} /><div className="flex justify-center"><button type="button" onClick={() => navigate(createdResult.adminUrl)} className="bg-blue-700 px-5 py-3 text-sm font-bold text-white hover:bg-blue-800">{t.tournament.enterAdminDashboard}</button></div></div>}
       {loadError && <div className="flex items-center gap-2 border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"><AlertCircle size={18} />{loadError}</div>}
-      {loading ? <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500"><Loader2 className="animate-spin" size={18} />Loading...</div> : tournaments.length === 0 ? <EmptyState onCreate={() => setCreateOpen(true)} /> : <div className="space-y-8"><TournamentSection title={t.tournament.ongoing} items={ongoing} onManage={handleManage} /><TournamentSection title={t.tournament.ended} items={ended} onManage={handleManage} /></div>}
+      {loading ? <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500"><Loader2 className="animate-spin" size={18} />Loading...</div> : tournaments.length === 0 ? <EmptyState onCreate={() => setCreateOpen(true)} /> : <div className="space-y-8"><TournamentSection title={t.tournament.ongoing} items={ongoing} /><TournamentSection title={t.tournament.ended} items={ended} /></div>}
 
-      {createOpen && <CreateTournamentModal onClose={() => setCreateOpen(false)} onCreated={(result) => { const publicId = result.publicUrl.split('/').pop(); const managementToken = result.adminUrl.split('/').pop(); if (publicId && managementToken) localStorage.setItem(credentialKey(publicId), managementToken); setCreateOpen(false); setCreatedResult(result); void refresh(); }} />}
-      {accessTarget && <AccessModal tournament={accessTarget} onClose={() => setAccessTarget(null)} onSubmit={handleAccess} />}
+      {createOpen && <CreateTournamentModal onClose={() => setCreateOpen(false)} onCreated={(result) => { const publicId = result.publicUrl.split('/').pop(); const managementToken = result.adminUrl.split('/').pop(); if (publicId && managementToken) localStorage.setItem(credentialKey(publicId), managementToken); setCreateOpen(false); navigate(result.adminUrl); }} />}
     </main>
   );
 }
@@ -102,27 +76,11 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
   return <div className="border border-dashed border-slate-300 px-6 py-16 text-center dark:border-slate-700"><CalendarDays className="mx-auto mb-4 text-blue-500" size={32} /><h2 className="text-lg font-bold">{t.tournament.noTournaments}</h2><p className="mt-2 text-sm text-slate-500">{t.tournament.noTournamentsHint}</p><button type="button" onClick={onCreate} className="mt-6 bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800">{t.tournament.createNew}</button></div>;
 }
 
-function TournamentSection({ title, items, onManage }: { title: string; items: TournamentSummary[]; onManage: (item: TournamentSummary) => void }) {
+function TournamentSection({ title, items }: { title: string; items: TournamentSummary[] }) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   if (items.length === 0) return null;
-  return <section className="space-y-3"><div className="flex items-center gap-3"><h2 className="text-xs font-black uppercase tracking-[.2em] text-slate-500">{title}</h2><span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" /><span className="text-xs font-bold text-slate-400">{items.length}</span></div><div className="grid gap-3 md:grid-cols-2">{items.map((item) => <article key={item.id} className="group border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-800"><div className="flex items-start justify-between gap-4"><div><h3 className="text-lg font-bold text-slate-950 dark:text-white">{item.name}</h3><p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-500">{item.format.replace('_', ' ')}</p></div><span className={`px-2 py-1 text-[10px] font-black uppercase tracking-wider ${item.status === 'completed' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'}`}>{item.status === 'completed' ? t.tournament.ended : t.tournament.ongoing}</span></div><div className="mt-5 flex items-center justify-between gap-3"><span className="text-xs text-slate-500">{new Date(item.updatedAt).toLocaleDateString()}</span><button type="button" onClick={() => onManage(item)} className="inline-flex items-center gap-2 bg-slate-950 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700 dark:bg-white dark:text-slate-950 dark:hover:bg-blue-200"><KeyRound size={14} />{t.tournament.manage}</button></div></article>)}</div></section>;
-}
-
-function AccessModal({ tournament, onClose, onSubmit }: { tournament: TournamentSummary; onClose: () => void; onSubmit: (passphrase: string) => Promise<{ ok: boolean; message?: string }> }) {
-  const { t } = useLanguage();
-  const [passphrase, setPassphrase] = useState(''); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
-  const submit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (passphrase.trim().length < BOUNDS.MIN_MANAGEMENT_PASSPHRASE_LENGTH) {
-      setError((t.tournament.passphraseTooShort || 'Management passphrase must be at least {min} characters').replace('{min}', BOUNDS.MIN_MANAGEMENT_PASSPHRASE_LENGTH.toString()));
-      return;
-    }
-    setBusy(true);
-    const res = await onSubmit(passphrase);
-    setBusy(false);
-    if (!res.ok) setError(res.message || t.tournament.accessDenied);
-  };
-  return <Modal title={t.tournament.accessTournament} onClose={onClose}><form onSubmit={submit} className="space-y-5"><p className="text-sm text-slate-500">{t.tournament.accessHint} <strong className="text-slate-800 dark:text-slate-200">{tournament.name}</strong></p><label className="block space-y-2 text-sm font-semibold"><span>{t.tournament.managementPassphraseLabel}</span><input autoFocus type="password" value={passphrase} onChange={(e) => { setPassphrase(e.target.value); setError(''); }} placeholder={t.tournament.managementPassphrasePlaceholder} className="w-full border border-slate-300 bg-slate-50 px-3 py-3 text-sm outline-none focus:border-blue-600 dark:border-slate-700 dark:bg-slate-800" /> </label>{error && <p className="flex items-center gap-2 text-sm text-red-600"><AlertCircle size={16} />{error}</p>}<button disabled={busy} className="flex w-full items-center justify-center gap-2 bg-blue-700 py-3 text-sm font-bold text-white disabled:opacity-50">{busy && <Loader2 size={16} className="animate-spin" />}{busy ? t.tournament.unlocking : t.tournament.unlock}</button></form></Modal>;
+  return <section className="space-y-3"><div className="flex items-center gap-3"><h2 className="text-xs font-black uppercase tracking-[.2em] text-slate-500">{title}</h2><span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" /><span className="text-xs font-bold text-slate-400">{items.length}</span></div><div className="grid gap-3 md:grid-cols-2">{items.map((item) => <article key={item.id} onClick={() => navigate(`/tournaments/view/${item.publicId}`)} className="group cursor-pointer border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-800"><div className="flex items-start justify-between gap-4"><div><h3 className="text-lg font-bold text-slate-950 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">{item.name}</h3><p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-500">{item.format.replace('_', ' ')}</p></div><span className={`px-2 py-1 text-[10px] font-black uppercase tracking-wider ${item.status === 'completed' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'}`}>{item.status === 'completed' ? t.tournament.ended : t.tournament.ongoing}</span></div><div className="mt-5 flex items-center justify-between gap-3"><span className="text-xs text-slate-500">{new Date(item.updatedAt).toLocaleDateString()}</span></div></article>)}</div></section>;
 }
 
 function CreateTournamentModal({ onClose, onCreated }: { onClose: () => void; onCreated: (result: { adminUrl: string; publicUrl: string }) => void }) {

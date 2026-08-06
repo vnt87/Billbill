@@ -217,3 +217,12 @@ export async function updateTournamentAggregate(
     updatedAt: result.updated_at,
   };
 }
+
+export async function deleteTournamentRecord(
+  db: D1Database,
+  id: string,
+  expectedVersion: number
+): Promise<boolean> {
+  const result = await db.prepare(`DELETE FROM tournaments WHERE id = ?1 AND version = ?2`).bind(id, expectedVersion).run();
+  return Boolean(result.success);
+}

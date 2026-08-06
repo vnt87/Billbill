@@ -16,7 +16,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   if (context.request.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://chiabill.pages.dev',
         'Access-Control-Allow-Methods': 'GET, PATCH, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
       },
@@ -26,7 +26,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   if (context.request.method === 'GET') {
     const result = await getAdminTournamentService(context.env.TOURNAMENT_DB, token);
     if ('error' in result) {
-      const status = result.error.code === 'TOURNAMENT_NOT_FOUND' ? 404 : 400;
+      let status = 400;
+      if (result.error.code === 'TOURNAMENT_NOT_FOUND') status = 404;
+      if (result.error.code === 'DATA_CORRUPTION') status = 500;
       return jsonError(result.error.code, result.error.message, status);
     }
     return jsonSuccess(result.data, result.version, 200);
@@ -41,6 +43,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         let status = 422;
         if (result.error.code === 'TOURNAMENT_NOT_FOUND') status = 404;
         if (result.error.code === 'STALE_VERSION') status = 409;
+        if (result.error.code === 'DATA_CORRUPTION') status = 500;
         return jsonError(result.error.code, result.error.message, status, result.error.fields);
       }
 

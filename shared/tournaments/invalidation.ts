@@ -25,9 +25,18 @@ export function reconcileAggregateEntrants(
   }
 
   const oldMatchMap = new Map<string, Match>(oldMatches.map((m) => [m.id, m]));
+  const desiredMap = new Map<string, Match>(desiredMatches.map((m) => [m.id, m]));
   const invalidatedMatchIds: string[] = [];
 
-  for (const desired of desiredMatches) {
+  // Sort matches by side and round (topological order)
+  const sideOrder: Record<string, number> = { winners: 1, losers: 2, grand_final: 3, round_robin: 1 };
+  const sortedMatches = [...desiredMatches].sort((a, b) => {
+    const sideDiff = (sideOrder[a.side] || 1) - (sideOrder[b.side] || 1);
+    if (sideDiff !== 0) return sideDiff;
+    return a.round - b.round;
+  });
+
+  for (const desired of sortedMatches) {
     const old = oldMatchMap.get(desired.id);
     if (!old) continue;
 
@@ -48,6 +57,10 @@ export function reconcileAggregateEntrants(
       desired.scoreB = old.scoreB;
       desired.winnerId = old.winnerId;
       desired.state = 'completed';
+
+      // Propagate outputs into descendant matches in desiredMap
+      const loserId = old.winnerId ? (old.winnerId === old.entrantAId ? old.entrantBId : old.entrantAId) : null;
+      propagatePreservedOutputs(desiredMap, desired.id, old.winnerId, loserId);
     } else if (old.state === 'completed') {
       // Result cleared!
       invalidatedMatchIds.push(desired.id);
@@ -66,4 +79,24 @@ export function reconcileAggregateEntrants(
     },
     invalidatedMatchIds,
   };
+}
+
+function propagatePreservedOutputs(
+  desiredMap: Map<string, Match>,
+  matchId: string,
+  winnerId: string | null,
+  loserId: string | null
+) {
+  for (const match of desiredMap.values()) {
+    if (match.sourceA.type === 'match_winner' && match.sourceA.matchId === matchId) {
+      match.entrantAId = winnerId;
+    } else if (match.sourceA.type === 'match_loser' && match.sourceA.matchId === matchId) {
+      match.entrantAId = loserId;
+    }
+    if (match.sourceB.type === 'match_winner' && match.sourceB.matchId === matchId) {
+      match.entrantBId = winnerId;
+    } else if (match.sourceB.type === 'match_loser' && match.sourceB.matchId === matchId) {
+      match.entrantBId = loserId;
+    }
+  }
 }

@@ -6,11 +6,12 @@ export function generateRoundRobinMatches(
   entrants: Entrant[],
   defaultBestOf: number
 ): Match[] {
-  const n = entrants.length;
+  const sortedEntrants = [...entrants].sort((a, b) => a.seed - b.seed);
+  const n = sortedEntrants.length;
   const isOdd = n % 2 !== 0;
 
   // Use entrant array or add sentinel BYE if odd
-  const list: Array<Entrant | null> = [...entrants];
+  const list: Array<Entrant | null> = [...sortedEntrants];
   if (isOdd) {
     list.push(null);
   }

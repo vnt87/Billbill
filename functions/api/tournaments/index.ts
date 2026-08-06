@@ -11,7 +11,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   if (context.request.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://chiabill.pages.dev',
         'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
       },
@@ -22,8 +22,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return jsonError('UNSUPPORTED_COMMAND', 'Method not allowed', 405);
   }
 
+  let payload: CreateTournamentInput;
   try {
-    const payload: CreateTournamentInput = await context.request.json();
+    payload = await context.request.json();
+  } catch (error) {
+    return jsonError('INVALID_INPUT', 'Malformed request payload', 400);
+  }
+
+  try {
     const result = await createTournamentService(context.env.TOURNAMENT_DB, payload);
 
     if ('error' in result) {
@@ -32,6 +38,6 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     return jsonSuccess(result.data, result.version, 201);
   } catch (error) {
-    return jsonError('INVALID_INPUT', 'Malformed request payload', 400);
+    return jsonError('INTERNAL_ERROR', 'Internal server error', 500);
   }
 };

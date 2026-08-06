@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Match, Entrant } from '../../../../shared/tournaments/types';
 import { BOUNDS } from '../../../../shared/tournaments/contracts';
 import { useLanguage } from '../../../contexts/LanguageContext';
@@ -39,6 +39,12 @@ export function MatchCard({
 
   const winsNeeded = Math.floor(match.bestOf / 2) + 1;
 
+  useEffect(() => {
+    setScoreA(match.scoreA !== null ? match.scoreA : '');
+    setScoreB(match.scoreB !== null ? match.scoreB : '');
+    setNote(match.privateNote || '');
+  }, [match.scoreA, match.scoreB, match.privateNote, isEditing]);
+
   const getEntrantName = (entrant: Entrant | null, isA: boolean) => {
     if (entrant) return entrant.name;
     if (match.state === 'bye') return t.tournament.bye;
@@ -50,9 +56,11 @@ export function MatchCard({
   };
 
   const handleSaveScore = () => {
+    if (scoreA === '' || scoreB === '') return;
     const valA = Number(scoreA);
     const valB = Number(scoreB);
-    if (isNaN(valA) || isNaN(valB)) return;
+    if (isNaN(valA) || isNaN(valB) || !Number.isInteger(valA) || !Number.isInteger(valB)) return;
+    if (valA < 0 || valA > winsNeeded || valB < 0 || valB > winsNeeded) return;
 
     if (onCompleteResult) {
       onCompleteResult(match.id, valA, valB);

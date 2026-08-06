@@ -44,7 +44,7 @@ The opportunity is a focused tool that lets an organizer move from a blank page 
 
 ### 4.2 MVP success measures
 
-- At least 95% of valid 2–32 entrant tournament fixtures in the automated test matrix generate without structural errors.
+- 100% of valid 2–32 entrant tournament fixtures in the automated test matrix generate without structural errors, and any fixture failure is a release blocker.
 - 100% of deterministic bracket and standings fixtures pass automated unit tests.
 - A first-time organizer can create a four-entrant tournament and copy both links in under three minutes during a moderated usability check.
 - All tournament screens pass the defined English/Vietnamese key-parity test and render in light and dark themes.

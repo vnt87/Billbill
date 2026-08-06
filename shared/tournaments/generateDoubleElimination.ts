@@ -82,24 +82,45 @@ export function generateDoubleEliminationMatches(
         sourceB = { type: 'match_loser', matchId: getWbId(wbDropRound, wbDropPos) };
       }
 
-      // Resolve current entrants and bye state
-      const matchA = sourceA.type === 'match_winner' ? matchMap.get(sourceA.matchId) : matchMap.get(sourceA.matchId);
-      const matchB = sourceB.type === 'match_winner' ? matchMap.get(sourceB.matchId) : matchMap.get(sourceB.matchId);
+      // Resolve current entrants and source resolution state
+      const matchA = matchMap.get(sourceA.matchId);
+      const matchB = matchMap.get(sourceB.matchId);
+
+      const resolvedA = sourceA.type === 'match_winner'
+        ? Boolean(matchA && matchA.winnerId !== null)
+        : Boolean(matchA && (matchA.state === 'completed' || matchA.state === 'bye'));
+
+      const resolvedB = sourceB.type === 'match_winner'
+        ? Boolean(matchB && matchB.winnerId !== null)
+        : Boolean(matchB && (matchB.state === 'completed' || matchB.state === 'bye'));
 
       let entrantAId: string | null = null;
       let entrantBId: string | null = null;
 
       if (sourceA.type === 'match_winner' && matchA) {
         entrantAId = matchA.winnerId;
-      } else if (sourceA.type === 'match_loser' && matchA && matchA.state === 'completed') {
-        // If match completed or bye
+      } else if (sourceA.type === 'match_loser' && matchA && (matchA.state === 'completed' || matchA.state === 'bye')) {
         entrantAId = matchA.winnerId ? (matchA.winnerId === matchA.entrantAId ? matchA.entrantBId : matchA.entrantAId) : null;
       }
 
       if (sourceB.type === 'match_winner' && matchB) {
         entrantBId = matchB.winnerId;
-      } else if (sourceB.type === 'match_loser' && matchB && matchB.state === 'completed') {
+      } else if (sourceB.type === 'match_loser' && matchB && (matchB.state === 'completed' || matchB.state === 'bye')) {
         entrantBId = matchB.winnerId ? (matchB.winnerId === matchB.entrantAId ? matchB.entrantBId : matchB.entrantAId) : null;
+      }
+
+      let state: Match['state'] = 'blocked';
+      let winnerId: string | null = null;
+
+      if (resolvedA && resolvedB) {
+        if (entrantAId && entrantBId) {
+          state = 'ready';
+        } else if (entrantAId || entrantBId) {
+          state = 'bye';
+          winnerId = entrantAId || entrantBId;
+        } else {
+          state = 'bye';
+        }
       }
 
       const lbMatch: Match = {
@@ -115,8 +136,8 @@ export function generateDoubleEliminationMatches(
         bestOf: defaultBestOf,
         scoreA: null,
         scoreB: null,
-        winnerId: null,
-        state: entrantAId && entrantBId ? 'ready' : 'blocked',
+        winnerId,
+        state,
         privateNote: null,
       };
 

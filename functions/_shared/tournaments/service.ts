@@ -8,13 +8,14 @@ import {
   ApiError,
 } from '../../../shared/tournaments/contracts';
 import { TournamentAggregate, Entrant, Tournament, Match } from '../../../shared/tournaments/types';
-import { validateCreateTournamentInput } from '../../../shared/tournaments/validation';
+import { validateCreateTournamentInput, validateEntrantsList } from '../../../shared/tournaments/validation';
 import { generateCapabilities, hashAdminToken } from './access';
 import {
   createTournamentRecord,
   getTournamentByAdminHash,
   getTournamentByPublicId,
   updateTournamentAggregate,
+  CorruptedStateError,
 } from './repository';
 import { generateSingleEliminationMatches } from '../../../shared/tournaments/generateSingleElimination';
 import { generateDoubleEliminationMatches } from '../../../shared/tournaments/generateDoubleElimination';
@@ -95,7 +96,15 @@ export async function getAdminTournamentService(
   adminToken: string
 ): Promise<{ data: AdminTournamentDto; version: number } | ApiError> {
   const hash = await hashAdminToken(adminToken);
-  const result = await getTournamentByAdminHash(db, hash);
+  let result;
+  try {
+    result = await getTournamentByAdminHash(db, hash);
+  } catch (err) {
+    if (err instanceof CorruptedStateError) {
+      return { error: { code: 'DATA_CORRUPTION', message: 'Persisted tournament state is corrupted' } };
+    }
+    throw err;
+  }
 
   if (!result) {
     return { error: { code: 'TOURNAMENT_NOT_FOUND', message: 'Tournament not found' } };
@@ -120,7 +129,15 @@ export async function getPublicTournamentService(
   db: D1Database,
   publicId: string
 ): Promise<{ data: PublicTournamentDto; version: number } | ApiError> {
-  const result = await getTournamentByPublicId(db, publicId);
+  let result;
+  try {
+    result = await getTournamentByPublicId(db, publicId);
+  } catch (err) {
+    if (err instanceof CorruptedStateError) {
+      return { error: { code: 'DATA_CORRUPTION', message: 'Persisted tournament state is corrupted' } };
+    }
+    throw err;
+  }
 
   if (!result) {
     return { error: { code: 'TOURNAMENT_NOT_FOUND', message: 'Tournament not found' } };
@@ -143,7 +160,15 @@ export async function updateTournamentService(
   req: UpdateTournamentRequest
 ): Promise<{ data: AdminTournamentDto; version: number } | ApiError> {
   const hash = await hashAdminToken(adminToken);
-  const result = await getTournamentByAdminHash(db, hash);
+  let result;
+  try {
+    result = await getTournamentByAdminHash(db, hash);
+  } catch (err) {
+    if (err instanceof CorruptedStateError) {
+      return { error: { code: 'DATA_CORRUPTION', message: 'Persisted tournament state is corrupted' } };
+    }
+    throw err;
+  }
 
   if (!result) {
     return { error: { code: 'TOURNAMENT_NOT_FOUND', message: 'Tournament not found' } };
@@ -158,6 +183,11 @@ export async function updateTournamentService(
   let nextAggregate = aggregate;
 
   if (req.command.type === 'updateEntrants') {
+    const val = validateEntrantsList(req.command.entrants, aggregate.tournament.entrantType);
+    if (!val.valid) {
+      return { error: { code: val.code!, message: val.message!, fields: val.fields } };
+    }
+
     const newEntrants: Entrant[] = req.command.entrants.map((e, idx) => ({
       id: (e as any).id || crypto.randomUUID(),
       tournamentId: aggregate.tournament.id,
@@ -192,6 +222,8 @@ export async function updateTournamentService(
         defaultBestOf: req.command.defaultBestOf || aggregate.tournament.defaultBestOf,
       },
     };
+  } else {
+    return { error: { code: 'UNSUPPORTED_COMMAND', message: 'Unsupported command type' } };
   }
 
   const updateRes = await updateTournamentAggregate(db, aggregate.tournament.id, req.expectedVersion, nextAggregate);
@@ -210,7 +242,15 @@ export async function updateMatchService(
   req: MatchMutationRequest
 ): Promise<{ data: AdminTournamentDto; version: number } | ApiError> {
   const hash = await hashAdminToken(adminToken);
-  const result = await getTournamentByAdminHash(db, hash);
+  let result;
+  try {
+    result = await getTournamentByAdminHash(db, hash);
+  } catch (err) {
+    if (err instanceof CorruptedStateError) {
+      return { error: { code: 'DATA_CORRUPTION', message: 'Persisted tournament state is corrupted' } };
+    }
+    throw err;
+  }
 
   if (!result) {
     return { error: { code: 'TOURNAMENT_NOT_FOUND', message: 'Tournament not found' } };

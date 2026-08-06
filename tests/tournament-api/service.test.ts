@@ -72,10 +72,11 @@ describe('Tournament Service & API Integration — Phase 4 & 5', () => {
     }
 
     // 4. Admin private note
-    await updateMatchService(db, adminToken, matchId, {
+    const noteRes = await updateMatchService(db, adminToken, matchId, {
       expectedVersion: 2,
       command: { type: 'updatePrivateNote', note: 'Secret table note: table 4' },
     });
+    expect('data' in noteRes).toBe(true);
 
     // 5. Spectator read
     const publicRead = await getPublicTournamentService(db, publicToken);

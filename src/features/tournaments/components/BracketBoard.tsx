@@ -1,5 +1,6 @@
 import { Match, Entrant, BracketSide } from '../../../../shared/tournaments/types';
 import { MatchCard } from './MatchCard';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface BracketBoardProps {
   matches: Match[];
@@ -20,6 +21,7 @@ export function BracketBoard({
   onUpdateNote,
   onOverrideBestOf,
 }: BracketBoardProps) {
+  const { t } = useLanguage();
   const isRoundRobin = matches.some((m) => m.side === 'round_robin');
   const isDoubleElimination = matches.some((m) => m.side === 'losers');
 
@@ -40,9 +42,9 @@ export function BracketBoard({
           <div className="flex items-start gap-4 min-w-max">
             {roundArray.map((round) => {
               const roundMatches = sideMatches.filter((m) => m.round === round);
-              let roundName = `Round ${round}`;
-              if (round === maxRound && side === 'winners') roundName = 'Winners Final';
-              if (round === maxRound && side === 'losers') roundName = 'Losers Final';
+              let roundName = (t.tournament.roundLabel || 'Round {round}').replace('{round}', round.toString());
+              if (round === maxRound && side === 'winners') roundName = t.tournament.winnersFinal || 'Winners Final';
+              if (round === maxRound && side === 'losers') roundName = t.tournament.losersFinal || 'Losers Final';
 
               return (
                 <div key={round} className="space-y-3 flex-shrink-0 w-[260px] sm:w-[300px]">
@@ -80,7 +82,7 @@ export function BracketBoard({
     return (
       <div className="space-y-4">
         <div className="font-bold text-base text-slate-800 dark:text-slate-200">
-          Match List
+          {t.tournament.matchList || 'Match List'}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {roundArray.map((round) => {
@@ -88,7 +90,7 @@ export function BracketBoard({
             return (
               <div key={round} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 space-y-2">
                 <div className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-1">
-                  Round {round}
+                  {(t.tournament.roundLabel || 'Round {round}').replace('{round}', round.toString())}
                 </div>
                 <div className="space-y-2">
                   {roundMatches.map((match) => (
@@ -114,9 +116,9 @@ export function BracketBoard({
 
   return (
     <div className="space-y-8">
-      {renderSideBracket('winners', isDoubleElimination ? 'Winners Bracket' : 'Bracket')}
-      {isDoubleElimination && renderSideBracket('losers', 'Losers Bracket')}
-      {renderSideBracket('grand_final', 'Grand Final')}
+      {renderSideBracket('winners', isDoubleElimination ? (t.tournament.winnersBracket || 'Winners Bracket') : (t.tournament.bracket || 'Bracket'))}
+      {isDoubleElimination && renderSideBracket('losers', t.tournament.losersBracket || 'Losers Bracket')}
+      {renderSideBracket('grand_final', t.tournament.grandFinal || 'Grand Final')}
     </div>
   );
 }

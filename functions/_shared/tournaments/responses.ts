@@ -4,7 +4,8 @@ const SECURITY_HEADERS = {
   'Content-Type': 'application/json',
   'Cache-Control': 'no-store, no-cache, must-revalidate',
   'Referrer-Policy': 'no-referrer',
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://chiabill.pages.dev',
+  'X-Content-Type-Options': 'nosniff',
 };
 
 export function jsonSuccess<T>(data: T, version?: number, status = 200): Response {

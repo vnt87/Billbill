@@ -40,6 +40,13 @@ export async function createTournamentRecord(
   };
 }
 
+export class CorruptedStateError extends Error {
+  constructor(message = 'Persisted tournament state is corrupted') {
+    super(message);
+    this.name = 'CorruptedStateError';
+  }
+}
+
 export async function getTournamentByAdminHash(
   db: D1Database,
   adminTokenHash: string
@@ -55,8 +62,12 @@ export async function getTournamentByAdminHash(
 
   if (!row) return null;
 
-  const aggregate: TournamentAggregate = JSON.parse(row.state_json);
-  return { record: row, aggregate };
+  try {
+    const aggregate: TournamentAggregate = JSON.parse(row.state_json);
+    return { record: row, aggregate };
+  } catch {
+    throw new CorruptedStateError();
+  }
 }
 
 export async function getTournamentByPublicId(
@@ -74,8 +85,12 @@ export async function getTournamentByPublicId(
 
   if (!row) return null;
 
-  const aggregate: TournamentAggregate = JSON.parse(row.state_json);
-  return { record: row, aggregate };
+  try {
+    const aggregate: TournamentAggregate = JSON.parse(row.state_json);
+    return { record: row, aggregate };
+  } catch {
+    throw new CorruptedStateError();
+  }
 }
 
 export async function updateTournamentAggregate(

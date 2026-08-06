@@ -61,14 +61,8 @@ export function validateEntrantInput(entrant: CreateEntrantInput, entrantType: E
   return { valid: true };
 }
 
-export function validateCreateTournamentInput(input: CreateTournamentInput): ValidationResult {
-  const nameVal = validateTournamentName(input.name);
-  if (!nameVal.valid) return nameVal;
-
-  const bestOfVal = validateBestOf(input.defaultBestOf);
-  if (!bestOfVal.valid) return bestOfVal;
-
-  if (!input.entrants || input.entrants.length < BOUNDS.MIN_ENTRANTS || input.entrants.length > BOUNDS.MAX_ENTRANTS) {
+export function validateEntrantsList(entrants: CreateEntrantInput[], entrantType: EntrantType): ValidationResult {
+  if (!entrants || entrants.length < BOUNDS.MIN_ENTRANTS || entrants.length > BOUNDS.MAX_ENTRANTS) {
     return {
       valid: false,
       code: 'ENTRANT_COUNT_OUT_OF_RANGE',
@@ -76,15 +70,47 @@ export function validateCreateTournamentInput(input: CreateTournamentInput): Val
     };
   }
 
-  for (let i = 0; i < input.entrants.length; i++) {
-    const entrantVal = validateEntrantInput(input.entrants[i], input.entrantType);
+  const seenSeeds = new Set<number>();
+  for (let i = 0; i < entrants.length; i++) {
+    const entrant = entrants[i];
+    const entrantVal = validateEntrantInput(entrant, entrantType);
     if (!entrantVal.valid) {
       return {
         ...entrantVal,
         fields: { entrantIndex: i.toString(), ...(entrantVal.fields || {}) },
       };
     }
+
+    const seed = entrant.seed;
+    if (seed === undefined || seed === null || !Number.isInteger(seed) || seed < 1 || seed > entrants.length) {
+      return {
+        valid: false,
+        code: 'INVALID_INPUT',
+        message: `Entrant seed must be an integer between 1 and ${entrants.length}`,
+        fields: { entrantIndex: i.toString() },
+      };
+    }
+
+    if (seenSeeds.has(seed)) {
+      return {
+        valid: false,
+        code: 'INVALID_INPUT',
+        message: `Duplicate seed ${seed} detected`,
+        fields: { entrantIndex: i.toString() },
+      };
+    }
+    seenSeeds.add(seed);
   }
 
   return { valid: true };
+}
+
+export function validateCreateTournamentInput(input: CreateTournamentInput): ValidationResult {
+  const nameVal = validateTournamentName(input.name);
+  if (!nameVal.valid) return nameVal;
+
+  const bestOfVal = validateBestOf(input.defaultBestOf);
+  if (!bestOfVal.valid) return bestOfVal;
+
+  return validateEntrantsList(input.entrants, input.entrantType);
 }

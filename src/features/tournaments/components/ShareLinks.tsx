@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { SpotlightCard } from '../../../components/ui/SpotlightCard';
 import { Copy, Check, ShieldAlert, Eye, Key } from 'lucide-react';
@@ -12,22 +12,44 @@ export function ShareLinks({ adminUrl, publicUrl }: ShareLinksProps) {
   const { t } = useLanguage();
   const [copiedAdmin, setCopiedAdmin] = useState(false);
   const [copiedPublic, setCopiedPublic] = useState(false);
+  const [copyErrorAdmin, setCopyErrorAdmin] = useState(false);
+  const [copyErrorPublic, setCopyErrorPublic] = useState(false);
+
+  const adminInputRef = useRef<HTMLInputElement>(null);
+  const publicInputRef = useRef<HTMLInputElement>(null);
 
   const fullAdminUrl = window.location.origin + adminUrl;
   const fullPublicUrl = window.location.origin + publicUrl;
 
   const copyToClipboard = async (text: string, isAdmin: boolean) => {
+    const inputRef = isAdmin ? adminInputRef : publicInputRef;
     try {
-      await navigator.clipboard.writeText(text);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        throw new Error('Clipboard API unavailable');
+      }
+
       if (isAdmin) {
         setCopiedAdmin(true);
+        setCopyErrorAdmin(false);
         setTimeout(() => setCopiedAdmin(false), 2000);
       } else {
         setCopiedPublic(true);
+        setCopyErrorPublic(false);
         setTimeout(() => setCopiedPublic(false), 2000);
       }
     } catch {
-      // Fallback if clipboard API unallowed
+      if (inputRef.current) {
+        inputRef.current.select();
+      }
+      if (isAdmin) {
+        setCopyErrorAdmin(true);
+        setTimeout(() => setCopyErrorAdmin(false), 3000);
+      } else {
+        setCopyErrorPublic(true);
+        setTimeout(() => setCopyErrorPublic(false), 3000);
+      }
     }
   };
 
@@ -44,6 +66,7 @@ export function ShareLinks({ adminUrl, publicUrl }: ShareLinksProps) {
         </p>
         <div className="flex items-center gap-2">
           <input
+            ref={adminInputRef}
             type="text"
             readOnly
             value={fullAdminUrl}
@@ -55,7 +78,9 @@ export function ShareLinks({ adminUrl, publicUrl }: ShareLinksProps) {
             className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs sm:text-sm flex items-center gap-1.5 transition-colors active:scale-95"
           >
             {copiedAdmin ? <Check size={16} /> : <Copy size={16} />}
-            <span className="hidden sm:inline">{t.tournament.copyAdminLink}</span>
+            <span className="hidden sm:inline">
+              {copiedAdmin ? 'Copied!' : copyErrorAdmin ? 'Selected (Ctrl+C)' : t.tournament.copyAdminLink}
+            </span>
           </button>
         </div>
       </div>
@@ -78,6 +103,7 @@ export function ShareLinks({ adminUrl, publicUrl }: ShareLinksProps) {
         </p>
         <div className="flex items-center gap-2">
           <input
+            ref={publicInputRef}
             type="text"
             readOnly
             value={fullPublicUrl}
@@ -89,7 +115,9 @@ export function ShareLinks({ adminUrl, publicUrl }: ShareLinksProps) {
             className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm flex items-center gap-1.5 transition-colors active:scale-95"
           >
             {copiedPublic ? <Check size={16} /> : <Copy size={16} />}
-            <span className="hidden sm:inline">{t.tournament.copyPublicLink}</span>
+            <span className="hidden sm:inline">
+              {copiedPublic ? 'Copied!' : copyErrorPublic ? 'Selected (Ctrl+C)' : t.tournament.copyPublicLink}
+            </span>
           </button>
         </div>
       </div>

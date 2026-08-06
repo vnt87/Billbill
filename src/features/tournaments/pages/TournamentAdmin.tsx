@@ -60,6 +60,7 @@ export function TournamentAdmin() {
 
   const handleUpdateEntrants = async (newEntrantsInput: CreateEntrantInput[], confirmedIds?: string[]) => {
     if (!adminToken || !adminDto) return;
+    setErrorMsg(null);
 
     const res = await updateTournament(adminToken, {
       expectedVersion: version,
@@ -91,6 +92,7 @@ export function TournamentAdmin() {
 
   const handleMatchCommand = async (matchId: string, command: MatchCommand, confirmedIds?: string[]) => {
     if (!adminToken || !adminDto) return;
+    setErrorMsg(null);
 
     const res = await updateMatch(adminToken, matchId, {
       expectedVersion: version,
@@ -164,6 +166,13 @@ export function TournamentAdmin() {
 
   return (
     <main className="space-y-6 py-6">
+      {errorMsg && (
+        <div className="p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
+          <AlertCircle size={18} className="shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
       {/* Top Header */}
       <SpotlightCard className="bg-white dark:bg-slate-900 p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 rounded-none">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -181,9 +190,9 @@ export function TournamentAdmin() {
               </span>
             </div>
             <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 flex items-center gap-3">
-              <span>Format: <strong className="text-slate-700 dark:text-slate-300 capitalize">{tournament.format.replace('_', ' ')}</strong></span>
+              <span>{t.tournament.formatLabel || 'Format'}: <strong className="text-slate-700 dark:text-slate-300 capitalize">{tournament.format.replace('_', ' ')}</strong></span>
               <span>•</span>
-              <span>BO{tournament.defaultBestOf}</span>
+              <span>{(t.tournament.overrideBestOf || 'BO')} {tournament.defaultBestOf}</span>
               <span>•</span>
               <span>v{version}</span>
             </div>
@@ -196,7 +205,7 @@ export function TournamentAdmin() {
               className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors active:scale-95"
             >
               <Share2 size={16} />
-              <span>Share Links</span>
+              <span>{t.tournament.shareLinks || 'Share Links'}</span>
             </button>
             <button
               type="button"

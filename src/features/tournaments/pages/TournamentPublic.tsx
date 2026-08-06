@@ -106,9 +106,9 @@ export function TournamentPublic() {
             </span>
           </div>
           <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 flex items-center gap-3">
-            <span>Format: <strong className="text-slate-700 dark:text-slate-300 capitalize">{format.replace('_', ' ')}</strong></span>
+            <span>{t.tournament.formatLabel || 'Format'}: <strong className="text-slate-700 dark:text-slate-300 capitalize">{format.replace('_', ' ')}</strong></span>
             <span>•</span>
-            <span>BO{defaultBestOf}</span>
+            <span>{(t.tournament.overrideBestOf || 'BO')} {defaultBestOf}</span>
             <span>•</span>
             <span>{t.tournament.lastUpdated}: {formattedUpdated}</span>
           </div>

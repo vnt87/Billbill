@@ -28,6 +28,7 @@ export function TournamentLanding() {
   const [createdResult, setCreatedResult] = useState<{ adminUrl: string; publicUrl: string } | null>(null);
 
   const handleEntrantTypeChange = (type: EntrantType) => {
+    if (type === entrantType) return;
     setEntrantType(type);
     if (type === 'individual') {
       const randomNames = getRandomDefaultPlayerNames(entrants.length);
@@ -98,7 +99,7 @@ export function TournamentLanding() {
               onClick={() => navigate(createdResult.adminUrl)}
               className="px-6 py-3 bg-blue-700 hover:bg-blue-800 text-white font-medium text-sm flex items-center gap-2 transition-colors active:scale-95 shadow-md"
             >
-              <span>Enter Admin Dashboard</span>
+              <span>{t.tournament.enterAdminDashboard || 'Enter Admin Dashboard'}</span>
               <ArrowRight size={18} />
             </button>
           </div>

@@ -17,7 +17,7 @@ sed: .codex/prompts/explore.md: No such file or directory
 
 ### Context
 - Attempted to load the required explorer role prompt before repository discovery.
-- The available prompt was found at `/Users/naam.vu/.codex/prompts/explore.md`.
+- The available prompt was found at `<user-home>/.codex/prompts/explore.md`.
 
 ### Suggested Fix
 Resolve role prompts from the global Codex prompt directory when the repository-local path is absent.

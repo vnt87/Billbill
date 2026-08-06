@@ -1,5 +1,6 @@
 import { TournamentAggregate, Match } from './types';
 import { MatchCommand, ApiError, ApiErrorCode } from './contracts';
+import { validateBestOf } from './validation';
 
 export interface ProgressResult {
   aggregate: TournamentAggregate;
@@ -63,6 +64,20 @@ export function applyMatchCommand(
 
   switch (command.type) {
     case 'saveDraftScore': {
+      if (targetMatch.state !== 'ready' && targetMatch.state !== 'draft') {
+        return { error: { code: 'MATCH_NOT_READY', message: 'Cannot save draft score for this match' } };
+      }
+      const winsNeeded = Math.floor(targetMatch.bestOf / 2) + 1;
+      if (command.scoreA !== null) {
+        if (command.scoreA < 0 || !Number.isInteger(command.scoreA) || command.scoreA > winsNeeded) {
+          return { error: { code: 'INVALID_INPUT', message: 'Draft score must be a non-negative integer within winning threshold' } };
+        }
+      }
+      if (command.scoreB !== null) {
+        if (command.scoreB < 0 || !Number.isInteger(command.scoreB) || command.scoreB > winsNeeded) {
+          return { error: { code: 'INVALID_INPUT', message: 'Draft score must be a non-negative integer within winning threshold' } };
+        }
+      }
       targetMatch.scoreA = command.scoreA;
       targetMatch.scoreB = command.scoreB;
       targetMatch.state = 'draft';
@@ -73,6 +88,11 @@ export function applyMatchCommand(
       break;
     }
     case 'overrideBestOf': {
+      const bestOfVal = validateBestOf(command.bestOf);
+      if (!bestOfVal.valid) {
+        return { error: { code: bestOfVal.code!, message: bestOfVal.message! } };
+      }
+
       const oldBestOf = targetMatch.bestOf;
       const newBestOf = command.bestOf;
       targetMatch.bestOf = newBestOf;
@@ -121,8 +141,8 @@ export function applyMatchCommand(
         winnerId = targetMatch.entrantAId;
       } else if (command.scoreB > command.scoreA) {
         winnerId = targetMatch.entrantBId;
-      } else if (command.winnerId) {
-        winnerId = command.winnerId;
+      } else {
+        winnerId = null;
       }
 
       targetMatch.scoreA = command.scoreA;

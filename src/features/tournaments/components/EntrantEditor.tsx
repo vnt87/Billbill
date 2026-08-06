@@ -46,7 +46,11 @@ export function EntrantEditor({ entrants, entrantType, onChange }: EntrantEditor
   };
 
   const handleRandomize = () => {
-    const shuffled = [...entrants].sort(() => Math.random() - 0.5);
+    const shuffled = [...entrants];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     const reseeded = shuffled.map((e, idx) => ({ ...e, seed: idx + 1 }));
     onChange(reseeded);
   };
@@ -128,7 +132,7 @@ export function EntrantEditor({ entrants, entrantType, onChange }: EntrantEditor
                 <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   {t.tournament.rosterLabel}
                 </div>
-                {entrant.roster.map((member, mIdx) => (
+                {(entrant.roster || []).map((member, mIdx) => (
                   <div key={mIdx} className="flex items-center gap-2">
                     <input
                       type="text"
@@ -138,7 +142,7 @@ export function EntrantEditor({ entrants, entrantType, onChange }: EntrantEditor
                       placeholder={`Member ${mIdx + 1}`}
                       className="flex-1 px-2.5 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs focus:outline-none"
                     />
-                    {entrant.roster.length > 1 && (
+                    {(entrant.roster || []).length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleRemoveRosterMember(idx, mIdx)}

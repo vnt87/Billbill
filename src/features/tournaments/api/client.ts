@@ -10,21 +10,57 @@ import {
 
 async function request<T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const signal = options?.signal || controller.signal;
+
     const res = await fetch(url, {
       ...options,
+      signal,
       headers: {
         'Content-Type': 'application/json',
         ...(options?.headers || {}),
       },
     });
+    clearTimeout(timeoutId);
 
-    const json = await res.json();
-    return json;
-  } catch (error) {
+    let json: any;
+    try {
+      json = await res.json();
+    } catch {
+      return {
+        error: {
+          code: 'SERVER_ERROR',
+          message: `HTTP ${res.status}: Failed to parse response body`,
+        },
+      };
+    }
+
+    if (!res.ok) {
+      return {
+        error: {
+          code: json?.error?.code || 'SERVER_ERROR',
+          message: json?.error?.message || `HTTP ${res.status} Error`,
+          fields: json?.error?.fields,
+        },
+      };
+    }
+
+    if (json && typeof json === 'object' && ('data' in json || 'error' in json)) {
+      return json;
+    }
+
+    return {
+      error: {
+        code: 'INVALID_RESPONSE',
+        message: 'Response format is invalid',
+      },
+    };
+  } catch (error: any) {
     return {
       error: {
         code: 'NETWORK_ERROR',
-        message: 'Network request failed. Please check your connection.',
+        message: error?.name === 'AbortError' ? 'Request timed out. Please try again.' : 'Network request failed. Please check your connection.',
       },
     };
   }

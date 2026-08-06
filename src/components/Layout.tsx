@@ -1,4 +1,4 @@
-import { Github, Sun, Moon, Calculator, ClockIcon } from 'lucide-react';
+import { Github, Sun, Moon, Calculator, ClockIcon, Heart } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Link, useLocation } from 'react-router-dom';
 import { RollingText } from './ui/RollingText';
@@ -82,17 +82,28 @@ export function Layout({ children, isDarkMode, setIsDarkMode }: LayoutProps) {
       </div>
       
       <footer className="mt-8 text-center">
-        <div className="py-4 text-sm text-slate-600 dark:text-slate-400">
-          Built by Nam Vu
-          <span aria-hidden="true" className="mx-2">|</span>
-          <a 
-            href="https://github.com/vnt87/Billbill" 
-            className="inline-flex items-center gap-1 hover:text-blue-700 dark:hover:text-blue-300"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Github size={14} /> Source code
-          </a>
+        <div className="py-4 text-sm text-slate-600 dark:text-slate-400 flex flex-col items-center gap-1">
+          <div>
+            Built with <Heart className="inline text-red-500 fill-red-500 mx-0.5" size={14} /> by{' '}
+            <a
+              href="https://namvu.net"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline font-medium"
+            >
+              Nam Vu
+            </a>
+          </div>
+          <div>
+            <a 
+              href="https://github.com/vnt87/Billbill" 
+              className="inline-flex items-center gap-1 hover:text-blue-700 dark:hover:text-blue-300"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Github size={14} /> Source code
+            </a>
+          </div>
         </div>
       </footer>
     </div>

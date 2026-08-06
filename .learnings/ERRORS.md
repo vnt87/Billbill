@@ -32,6 +32,38 @@ Resolve role prompts from the global Codex prompt directory when the repository-
 
 ---
 
+## [ERR-20260806-001] plan-review-bulk-patch-context
+
+**Logged**: 2026-08-06T00:00:00+07:00
+**Priority**: low
+**Status**: resolved
+**Area**: docs
+
+### Summary
+A cross-document architecture correction patch was rejected because one implementation-plan context block did not match exactly.
+
+### Error
+```
+apply_patch verification failed: Failed to find expected lines in tournament-tool-implementation-plan.md
+```
+
+### Context
+- Attempted to apply all architect-review corrections to three planning artifacts in one patch.
+- `apply_patch` rejected the patch atomically, so no partial document changes occurred.
+
+### Suggested Fix
+Apply cross-document corrections in smaller file-scoped patches after targeted line inspection.
+
+### Metadata
+- Reproducible: yes
+- Related Files: .omx/plans/tournament-tool-prd.md, .omx/plans/tournament-tool-techspec.md, .omx/plans/tournament-tool-implementation-plan.md
+
+### Resolution
+- **Resolved**: 2026-08-06T00:00:00+07:00
+- **Notes**: Switched to smaller verified patches.
+
+---
+
 ## [ERR-20260805-003] unsupported-explorer-model
 
 **Logged**: 2026-08-05T00:02:00+07:00

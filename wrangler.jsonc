@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "chiabill",
+  "pages_build_output_dir": "./dist",
+  "compatibility_date": "2026-08-06",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "TOURNAMENT_DB",
+      "database_name": "chiabill-tournaments",
+      "database_id": "local-tournament-db"
+    }
+  ]
+}

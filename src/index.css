@@ -124,10 +124,12 @@ body {
   transition: opacity 180ms ease-out;
 }
 
+.spotlight-surface[data-spotlight-active='true']::before,
 .dark .spotlight-surface[data-spotlight-active='true']::before {
   opacity: 1;
 }
 
+.spotlight-surface[data-spotlight-active='true']::after,
 .dark .spotlight-surface[data-spotlight-active='true']::after {
   opacity: 1;
 }

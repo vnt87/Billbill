@@ -186,5 +186,18 @@ export const vi = {
     lost: 'Thua',
     diff: 'Hiệu số',
     points: 'Điểm',
+    scoreboardLabel: 'Bảng điểm trận đấu',
+    backToTournament: 'Quay lại giải đấu',
+    home: 'Nhà',
+    away: 'Khách',
+    draftScore: 'Điểm nháp',
+    draftSaved: 'Đã lưu nháp · Lưu khi kết thúc trận',
+    adjustScoreHint: 'Mỗi thay đổi được lưu dưới dạng nháp',
+    editingCompletedScore: 'Đang sửa kết quả · Lưu để thay thế',
+    increaseScore: 'Tăng điểm cho',
+    decreaseScore: 'Giảm điểm cho',
+    confirmScoreTitle: 'Kết thúc trận đấu?',
+    confirmScoreMessage: 'Kết quả sẽ được công bố và cập nhật vào nhánh đấu nếu có.',
+    confirmScore: 'Kết thúc trận',
   }
 };

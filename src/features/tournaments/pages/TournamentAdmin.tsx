@@ -202,7 +202,7 @@ export function TournamentAdmin() {
             <button
               type="button"
               onClick={() => setShowShareLinks(!showShareLinks)}
-              className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors active:scale-95"
+              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors active:scale-95"
             >
               <Share2 size={16} />
               <span>{t.tournament.shareLinks || 'Share Links'}</span>
@@ -287,6 +287,7 @@ export function TournamentAdmin() {
             onClearResult={(mId) => handleMatchCommand(mId, { type: 'clearResult' })}
             onUpdateNote={(mId, note) => handleMatchCommand(mId, { type: 'updatePrivateNote', note })}
             onOverrideBestOf={(mId, bestOf) => handleMatchCommand(mId, { type: 'overrideBestOf', bestOf })}
+            matchHref={(match) => `/tournaments/manage/${adminToken}/matches/${match.id}`}
           />
         </div>
       )}

@@ -196,3 +196,134 @@ button:disabled {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Match scoreboard: a compact retro broadcast console, separate from the app's utility surfaces. */
+.match-scoreboard-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2.5rem) 0 3rem;
+}
+
+.match-scoreboard-page__topline,
+.scoreboard-shell__header,
+.scoreboard-actionbar,
+.scoreboard-tools,
+.score-confirm-dialog__header,
+.score-confirm-dialog__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.match-scoreboard-page__topline { margin-bottom: 1rem; }
+.scoreboard-back,
+.scoreboard-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  color: rgb(71 85 105);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.dark .scoreboard-back,
+.dark .scoreboard-refresh { color: rgb(203 213 225); }
+.scoreboard-back:hover { color: rgb(180 83 9); }
+.scoreboard-refresh { border: 0; background: transparent; cursor: pointer; }
+
+.scoreboard-shell {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(71 85 105 / .8);
+  background:
+    linear-gradient(180deg, rgb(30 41 59) 0%, rgb(15 23 42) 42%, rgb(10 15 28) 100%);
+  box-shadow: 0 24px 60px rgb(15 23 42 / .3), inset 0 1px rgb(255 255 255 / .1);
+  color: rgb(226 232 240);
+}
+.scoreboard-shell::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  opacity: .16;
+  background-image: repeating-linear-gradient(0deg, transparent 0 4px, rgb(255 255 255 / .12) 5px);
+  mix-blend-mode: screen;
+}
+.scoreboard-shell__lights {
+  display: flex;
+  gap: .5rem;
+  padding: .65rem clamp(1rem, 4vw, 2.5rem) .4rem;
+  border-bottom: 1px solid rgb(255 255 255 / .12);
+}
+.scoreboard-shell__lights i {
+  width: .45rem;
+  height: .45rem;
+  border-radius: 999px;
+  background: rgb(163 230 53);
+  box-shadow: 0 0 10px rgb(163 230 53 / .9);
+}
+.scoreboard-shell__header { padding: 1.4rem clamp(1rem, 4vw, 2.5rem) .75rem; position: relative; }
+.scoreboard-kicker { margin: 0 0 .25rem; color: rgb(251 191 36); font-size: .68rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
+.scoreboard-shell h1 { margin: 0; color: rgb(248 250 252); font-size: clamp(1.35rem, 4vw, 2.25rem); letter-spacing: .06em; }
+.scoreboard-status { display: inline-flex; align-items: center; gap: .45rem; padding: .45rem .65rem; border: 1px solid rgb(148 163 184 / .35); color: rgb(203 213 225); font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.scoreboard-status span { width: .45rem; height: .45rem; border-radius: 999px; background: rgb(251 191 36); }
+.scoreboard-status--completed span { background: rgb(74 222 128); box-shadow: 0 0 8px rgb(74 222 128); }
+.scoreboard-status--draft span { background: rgb(251 146 60); }
+.scoreboard-meta { display: flex; flex-wrap: wrap; gap: .65rem 1.5rem; padding: .75rem clamp(1rem, 4vw, 2.5rem); border-top: 1px solid rgb(255 255 255 / .1); border-bottom: 1px solid rgb(255 255 255 / .1); color: rgb(148 163 184); font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.scoreboard-players { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: clamp(.75rem, 4vw, 3rem); padding: clamp(1.25rem, 5vw, 3.5rem) clamp(1rem, 7vw, 5rem); position: relative; }
+.scoreboard-player { min-width: 0; text-align: center; }
+.scoreboard-player--away { text-align: center; }
+.scoreboard-player__role { margin: 0 0 .45rem; color: rgb(148 163 184); font-size: .65rem; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
+.scoreboard-player h2 { overflow: hidden; margin: 0; color: rgb(241 245 249); font-size: clamp(1.05rem, 3vw, 1.7rem); text-overflow: ellipsis; white-space: nowrap; }
+.scoreboard-player > span { display: block; margin-top: .25rem; color: rgb(100 116 139); font-family: 'IBM Plex Mono', monospace; font-size: .7rem; }
+.scoreboard-digit { margin-top: 1rem; }
+.scoreboard-digit__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.scoreboard-digit__window { display: inline-flex; gap: clamp(.2rem, 1vw, .5rem); padding: clamp(.55rem, 2vw, 1rem) clamp(.65rem, 2vw, 1.1rem); border: 1px solid rgb(148 163 184 / .35); background: rgb(2 6 23 / .82); box-shadow: inset 0 0 20px rgb(0 0 0 / .55), 0 5px 0 rgb(2 6 23 / .7); }
+.scoreboard-digit__character { min-width: .75em; color: rgb(254 240 138); font-family: 'IBM Plex Mono', monospace; font-size: clamp(4.4rem, 16vw, 9.5rem); font-weight: 700; line-height: .82; letter-spacing: -.12em; text-shadow: 0 0 4px rgb(254 240 138 / .85), 0 0 18px rgb(250 204 21 / .45); }
+.scoreboard-digit--away .scoreboard-digit__character { color: rgb(253 186 116); text-shadow: 0 0 4px rgb(253 186 116 / .85), 0 0 18px rgb(234 88 12 / .45); }
+.scoreboard-versus { display: grid; justify-items: center; gap: .8rem; color: rgb(251 191 36); font-family: 'IBM Plex Mono', monospace; font-size: .75rem; font-weight: 700; letter-spacing: .16em; }
+.scoreboard-versus i { display: block; width: 1px; height: 5rem; background: linear-gradient(rgb(251 191 36 / 0), rgb(251 191 36 / .8), rgb(251 191 36 / 0)); }
+.scoreboard-controls { display: flex; justify-content: center; gap: .5rem; margin-top: 1rem; }
+.scoreboard-controls button { display: inline-grid; place-items: center; width: 3rem; height: 2.7rem; border: 1px solid rgb(148 163 184 / .5); background: rgb(30 41 59 / .8); color: rgb(226 232 240); cursor: pointer; transition: background 160ms ease, transform 160ms ease; }
+.scoreboard-controls button:hover { background: rgb(180 83 9); transform: translateY(-2px); }
+.scoreboard-actionbar { padding: 1rem clamp(1rem, 4vw, 2.5rem); border-top: 1px solid rgb(255 255 255 / .12); background: rgb(2 6 23 / .5); }
+.scoreboard-actionbar__hint { color: rgb(148 163 184); font-size: .72rem; }
+.score-button { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 2.7rem; padding: .65rem .9rem; border: 1px solid transparent; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.score-button:disabled { cursor: not-allowed; opacity: .4; }
+.score-button--confirm { border-color: rgb(251 191 36); background: rgb(180 83 9); color: rgb(255 247 237); }
+.score-button--confirm:hover:not(:disabled) { background: rgb(217 119 6); }
+.score-button--quiet { border-color: rgb(100 116 139 / .6); background: transparent; color: rgb(203 213 225); }
+.score-button--quiet:hover { background: rgb(51 65 85); }
+.scoreboard-tools { align-items: flex-start; padding: .8rem clamp(1rem, 4vw, 2.5rem); border-top: 1px solid rgb(255 255 255 / .08); }
+.score-tool { display: inline-flex; align-items: center; gap: .45rem; border: 0; background: transparent; color: rgb(203 213 225); font-size: .7rem; font-weight: 700; text-transform: uppercase; cursor: pointer; }
+.score-note { width: min(100%, 28rem); margin-left: auto; padding: .75rem; border: 1px solid rgb(251 191 36 / .4); background: rgb(30 41 59 / .75); }
+.score-note > div { display: flex; align-items: center; gap: .35rem; margin-bottom: .5rem; color: rgb(251 191 36); font-size: .68rem; font-weight: 700; text-transform: uppercase; }
+.score-note textarea { display: block; width: 100%; min-height: 4.5rem; padding: .6rem; border: 1px solid rgb(100 116 139 / .6); background: rgb(15 23 42); color: rgb(226 232 240); resize: vertical; }
+.score-note .score-button { margin-top: .55rem; }
+.scoreboard-winner { display: flex; align-items: center; justify-content: center; gap: .45rem; padding: .8rem; border-top: 1px solid rgb(74 222 128 / .35); color: rgb(134 239 172); font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.scoreboard-error { max-width: 32rem; margin: 4rem auto; padding: 2rem; border: 1px solid rgb(248 113 113 / .4); background: rgb(254 242 242); color: rgb(127 29 29); text-align: center; }
+.dark .scoreboard-error { background: rgb(69 10 10); color: rgb(254 202 202); }
+.scoreboard-error h1 { margin: 0 0 .5rem; font-size: 1.2rem; }
+.scoreboard-error button { margin-top: 1rem; padding: .65rem 1rem; border: 0; background: rgb(180 83 9); color: white; cursor: pointer; }
+.score-confirm-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 1rem; background: rgb(2 6 23 / .76); backdrop-filter: blur(3px); }
+.score-confirm-dialog { width: min(100%, 30rem); padding: 1.4rem; border: 1px solid rgb(251 191 36 / .55); background: rgb(15 23 42); color: rgb(226 232 240); box-shadow: 0 25px 70px rgb(0 0 0 / .4); }
+.score-confirm-dialog__title { display: flex; align-items: center; gap: .5rem; color: rgb(251 191 36); }
+.score-confirm-dialog h2 { margin: 0; font-size: 1rem; }
+.score-confirm-dialog p { color: rgb(148 163 184); font-size: .8rem; }
+.score-icon-button { display: grid; place-items: center; border: 0; background: transparent; color: rgb(148 163 184); cursor: pointer; }
+.score-confirm-dialog__result { display: grid; grid-template-columns: 1fr auto; gap: .45rem 1rem; margin: 1rem 0; padding: .9rem; border: 1px solid rgb(100 116 139 / .5); background: rgb(2 6 23 / .65); font-size: .8rem; }
+.score-confirm-dialog__result strong { color: rgb(254 240 138); font-family: 'IBM Plex Mono', monospace; font-size: 1.25rem; }
+.score-confirm-dialog__actions { justify-content: flex-end; }
+
+@media (max-width: 640px) {
+  .scoreboard-shell__header { align-items: flex-start; flex-direction: column; }
+  .scoreboard-players { grid-template-columns: 1fr; gap: 1rem; }
+  .scoreboard-versus { grid-row: 2; grid-template-columns: 1fr auto 1fr; width: 100%; gap: .6rem; }
+  .scoreboard-versus i { width: 100%; height: 1px; background: linear-gradient(90deg, rgb(251 191 36 / 0), rgb(251 191 36 / .8), rgb(251 191 36 / 0)); }
+  .scoreboard-player--away { grid-row: 3; }
+  .scoreboard-actionbar { align-items: flex-start; flex-direction: column; }
+  .scoreboard-actionbar .score-button { width: 100%; }
+  .score-note { width: 100%; margin-left: 0; }
+}

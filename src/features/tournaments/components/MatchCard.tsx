@@ -4,6 +4,7 @@ import { BOUNDS } from '../../../../shared/tournaments/contracts';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { SpotlightCard } from '../../../components/ui/SpotlightCard';
 import { Check, Edit2, FileText, Lock, Trophy } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface MatchCardProps {
   match: Match;
@@ -14,6 +15,9 @@ interface MatchCardProps {
   onSaveDraft?: (matchId: string, scoreA: number | null, scoreB: number | null) => void;
   onUpdateNote?: (matchId: string, note: string | null) => void;
   onOverrideBestOf?: (matchId: string, bestOf: number) => void;
+  detailHref?: string;
+  matchNumber?: number;
+  showMatchNumberOnLeft?: boolean;
 }
 
 export function MatchCard({
@@ -24,6 +28,9 @@ export function MatchCard({
   onClearResult,
   onUpdateNote,
   onOverrideBestOf,
+  detailHref,
+  matchNumber,
+  showMatchNumberOnLeft = false,
 }: MatchCardProps) {
   const { t } = useLanguage();
   const entrantMap = new Map(entrants.map((e) => [e.id, e]));
@@ -84,58 +91,78 @@ export function MatchCard({
     }
   };
 
-  return (
-    <SpotlightCard className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-3 space-y-2 text-xs sm:text-sm min-w-[240px] max-w-[320px] rounded-none transition-all">
+  const cardContent = (
+    <SpotlightCard className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm p-2.5 space-y-2 text-xs sm:text-sm min-w-[220px] max-w-[320px] rounded-none transition-all">
       {/* Header Info */}
       <div className="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-        <span className="truncate uppercase tracking-wider">
-          {match.side.replace('_', ' ')} • R{match.round} M{match.position}
-        </span>
+        {detailHref ? (
+          <Link to={detailHref} className="truncate uppercase tracking-wider hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+            {match.side.replace('_', ' ')} • R{match.round} M{match.position}
+          </Link>
+        ) : (
+          <span className="truncate uppercase tracking-wider">{match.side.replace('_', ' ')} • R{match.round} M{match.position}</span>
+        )}
         <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-mono">
           BO{match.bestOf}
         </span>
       </div>
 
       {/* Entrants & Scores List */}
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         {/* Entrant A */}
         <div
-          className={`flex items-center justify-between p-2 border transition-colors ${
+          className={`flex items-center justify-between border transition-colors overflow-hidden ${
             match.winnerId && match.winnerId === match.entrantAId
-              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 font-semibold'
-              : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-800'
+              ? 'bg-slate-100 dark:bg-slate-800/80 border-slate-300 dark:border-slate-700 font-semibold'
+              : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800'
           }`}
         >
-          <div className="flex items-center gap-1.5 truncate">
-            {entrantA && <span className="font-mono text-[11px] text-slate-400">#{entrantA.seed}</span>}
-            <span className="truncate">{getEntrantName(entrantA, true)}</span>
+          <div className="flex items-center gap-2 px-2 py-1.5 truncate min-w-0 flex-1">
+            <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500 w-4 text-center shrink-0">
+              {entrantA ? entrantA.seed : '-'}
+            </span>
+            <span className="truncate text-slate-800 dark:text-slate-200">{getEntrantName(entrantA, true)}</span>
             {match.winnerId && match.winnerId === match.entrantAId && (
-              <Trophy size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <Trophy size={13} className="text-amber-500 dark:text-amber-400 shrink-0 ml-auto" />
             )}
           </div>
-          <span className="font-mono font-bold text-sm text-slate-900 dark:text-slate-100">
+          <div
+            className={`w-9 py-1.5 text-center font-mono font-bold text-xs shrink-0 ${
+              match.winnerId && match.winnerId === match.entrantAId
+                ? 'bg-amber-500 text-white font-black'
+                : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+            }`}
+          >
             {match.scoreA !== null ? match.scoreA : '-'}
-          </span>
+          </div>
         </div>
 
         {/* Entrant B */}
         <div
-          className={`flex items-center justify-between p-2 border transition-colors ${
+          className={`flex items-center justify-between border transition-colors overflow-hidden ${
             match.winnerId && match.winnerId === match.entrantBId
-              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 font-semibold'
-              : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-800'
+              ? 'bg-slate-100 dark:bg-slate-800/80 border-slate-300 dark:border-slate-700 font-semibold'
+              : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800'
           }`}
         >
-          <div className="flex items-center gap-1.5 truncate">
-            {entrantB && <span className="font-mono text-[11px] text-slate-400">#{entrantB.seed}</span>}
-            <span className="truncate">{getEntrantName(entrantB, false)}</span>
+          <div className="flex items-center gap-2 px-2 py-1.5 truncate min-w-0 flex-1">
+            <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500 w-4 text-center shrink-0">
+              {entrantB ? entrantB.seed : '-'}
+            </span>
+            <span className="truncate text-slate-800 dark:text-slate-200">{getEntrantName(entrantB, false)}</span>
             {match.winnerId && match.winnerId === match.entrantBId && (
-              <Trophy size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <Trophy size={13} className="text-amber-500 dark:text-amber-400 shrink-0 ml-auto" />
             )}
           </div>
-          <span className="font-mono font-bold text-sm text-slate-900 dark:text-slate-100">
+          <div
+            className={`w-9 py-1.5 text-center font-mono font-bold text-xs shrink-0 ${
+              match.winnerId && match.winnerId === match.entrantBId
+                ? 'bg-amber-500 text-white font-black'
+                : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+            }`}
+          >
             {match.scoreB !== null ? match.scoreB : '-'}
-          </span>
+          </div>
         </div>
       </div>
 
@@ -277,4 +304,17 @@ export function MatchCard({
       )}
     </SpotlightCard>
   );
+
+  if (showMatchNumberOnLeft && matchNumber !== undefined) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="w-4 text-right font-mono text-xs font-medium text-slate-400 dark:text-slate-500 shrink-0">
+          {matchNumber}
+        </span>
+        {cardContent}
+      </div>
+    );
+  }
+
+  return cardContent;
 }

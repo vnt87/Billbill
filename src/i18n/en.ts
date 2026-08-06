@@ -186,5 +186,18 @@ export const en = {
     lost: 'Lost',
     diff: 'Diff',
     points: 'Points',
+    scoreboardLabel: 'Match scoreboard',
+    backToTournament: 'Back to tournament',
+    home: 'Home',
+    away: 'Away',
+    draftScore: 'Draft score',
+    draftSaved: 'Draft saved · Save when the match is concluded',
+    adjustScoreHint: 'Each adjustment is saved as a draft',
+    editingCompletedScore: 'Editing completed result · Save to replace it',
+    increaseScore: 'Increase score for',
+    decreaseScore: 'Decrease score for',
+    confirmScoreTitle: 'Conclude this match?',
+    confirmScoreMessage: 'This will publish the result and advance the bracket where applicable.',
+    confirmScore: 'Conclude match',
   }
 };

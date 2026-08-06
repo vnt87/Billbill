@@ -9,6 +9,7 @@ import { Layout } from './components/Layout';
 const TournamentLanding = lazy(() => import('./features/tournaments/pages/TournamentLanding'));
 const TournamentAdmin = lazy(() => import('./features/tournaments/pages/TournamentAdmin'));
 const TournamentPublic = lazy(() => import('./features/tournaments/pages/TournamentPublic'));
+const MatchScoreboardPage = lazy(() => import('./features/tournaments/pages/MatchScoreboardPage'));
 
 // Wrapper component to handle route parameters for BillDetails
 function BillDetailsWrapper() {
@@ -52,7 +53,9 @@ function App() {
             <Route path="/bill/:id" element={<BillDetailsWrapper />} />
             <Route path="/tournaments" element={<TournamentLanding />} />
             <Route path="/tournaments/manage/:adminToken" element={<TournamentAdmin />} />
+            <Route path="/tournaments/manage/:adminToken/matches/:matchId" element={<MatchScoreboardPage mode="admin" />} />
             <Route path="/tournaments/view/:publicToken" element={<TournamentPublic />} />
+            <Route path="/tournaments/view/:publicToken/matches/:matchId" element={<MatchScoreboardPage mode="public" />} />
           </Routes>
         </Suspense>
       </Layout>

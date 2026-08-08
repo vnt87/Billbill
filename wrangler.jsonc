@@ -9,12 +9,5 @@
       "binding": "BILLS",
       "id": "9f97de08b0344e0f8caaabf7e8112e97"
     }
-  ],
-  "d1_databases": [
-    {
-      "binding": "TOURNAMENT_DB",
-      "database_name": "chiabill-tournaments",
-      "database_id": "db21c4ec-2069-4388-b9eb-6631a556bb33"
-    }
   ]
 }

@@ -1,4 +1,4 @@
-import { Github, Sun, Moon, Calculator, ClockIcon, Heart, Trophy } from 'lucide-react';
+import { Github, Sun, Moon, Calculator, ClockIcon, Heart } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Link, useLocation } from 'react-router-dom';
 import { RollingText } from './ui/RollingText';
@@ -15,9 +15,6 @@ export function Layout({ children, isDarkMode, setIsDarkMode }: LayoutProps) {
   const isActive = (path: string) => {
     if (path === '/') {
       return location.pathname === '/' || location.pathname === '/calculator';
-    }
-    if (path === '/tournaments') {
-      return location.pathname.startsWith('/tournaments');
     }
     return location.pathname === path ||
       (path === '/history' && location.pathname.startsWith('/bill/'));
@@ -60,20 +57,6 @@ export function Layout({ children, isDarkMode, setIsDarkMode }: LayoutProps) {
               >
                 <ClockIcon size={20} />
                 <RollingText className="hidden sm:inline">{t.navigation.history}</RollingText>
-              </Link>
-              <Link
-                to="/tournaments"
-                aria-label={t.navigation.tournament}
-                aria-current={isActive('/tournaments') ? 'page' : undefined}
-                title={t.navigation.tournament}
-                className={`rolling-text-trigger h-10 px-2.5 sm:px-3 rounded-none flex items-center gap-2 font-medium ${
-                  isActive('/tournaments')
-                    ? 'bg-blue-700 text-white'
-                    : 'bg-white text-slate-700 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800'
-                } transition-colors active:scale-[0.98]`}
-              >
-                <Trophy size={20} />
-                <RollingText className="hidden sm:inline">{t.navigation.tournament}</RollingText>
               </Link>
             </nav>
             <button
